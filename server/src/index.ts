@@ -2,8 +2,17 @@ import express from "express";
 import cors from "cors"
 import authRouter from "./routes/auth";
 import { PORT } from "./config/env";
+import { pool } from "./config/database";
 
 const app = express();
+
+pool.query("SELECT 1")
+    .then(() => {
+        console.log("database connected");
+    })
+    .catch((error) => {
+        console.error("database connection failed", error);
+    });
 
 app.use(cors());
 app.use(express.json());
