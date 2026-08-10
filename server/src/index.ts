@@ -1,5 +1,7 @@
 import express from "express";
 import cors from "cors"
+import authRouter from "./routes/auth";
+import { PORT } from "./config/env";
 
 const app = express();
 
@@ -13,7 +15,7 @@ app.get("/api/health", (_req, res) => {
     })
 });
 
-const PORT = 5000;
+app.use("/api/auth", authRouter);
 
 app.listen(PORT, () => {
     console.log(`Server is running on http://localhost:${PORT}`);
