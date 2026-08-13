@@ -1,41 +1,30 @@
-import { useState } from "react"
+import { Link } from "react-router-dom";
+import OAuthButtons from "../componenets/OAuthButtons";
+import OAuthDivider from "../componenets/OAuthDivider";
+import SignupForm from "../componenets/SignupForm";
 
-function SinupPage() {
-    const [emailId, setEmailId] = useState<string>("");
-    const [password, setPassword] = useState<string>("");
-
-    const handleSignupSubmit = () => {
-
-    };
+function SignupPage() {
     return (
-        <form className="sinup-conatiner" onSubmit={handleSignupSubmit}>
-            <div>
-                <label htmlFor="emailId">Email Id</label>
-                <input 
-                    id="emailId"
-                    type="text" 
-                    value={emailId} 
-                    onChange={(event) => setEmailId(event.target.value)}
-                    placeholder="Enter your email address"
-                    required
-                />
+        <div className="auth-page">
+            <div className="auth-content">
+                <header className="auth-header">
+                    <h1>Create your TaskFlow account</h1>
+                    <p>Get started with Taskflow</p>
+                </header>
+
+                <SignupForm />
+
+                <OAuthDivider />
+
+                <OAuthButtons />
+
+                <p className="signup-prompt">
+                    Already have an account ? {" "}
+                    <Link to="/login">Log in</Link>
+                </p>
             </div>
-            <div>
-                <label htmlFor="password">Password</label>
-                <input 
-                    id="password"
-                    type="password" 
-                    value={password} 
-                    onChange={(event) => setPassword(event.target.value)}
-                    required
-                    placeholder="Enter your password"
-                />
-            </div>
-            <div>
-                <button type="submit">Singn up</button>
-            </div>
-        </form>
+        </div>
     )
 }
 
-export default SinupPage;
+export default SignupPage;

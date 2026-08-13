@@ -1,4 +1,7 @@
+import { Link } from "react-router-dom";
 import LoginForm from "../componenets/LoginForm";
+import OAuthButtons from "../componenets/OAuthButtons";
+import OAuthDivider from "../componenets/OAuthDivider";
 import "../styles/auth.css";
 
 function LoginPage() {
@@ -11,18 +14,14 @@ function LoginPage() {
             <p>Connect to TaskFlow with:</p>
         </header>
 
-        <div className="oauth-options">
-            <button type="button">Google</button>
-            <button type="button">GitHub</button>
-        </div>
+        <OAuthButtons />
 
-        <div className="oauth-divider">
-          <span>Or continue with</span>
-        </div>
+        <OAuthDivider />
+
         <LoginForm />
-        <div className="signup-prompt">
-            <p>New to Taskflow ?<a href="/signup">Sign up for an account</a></p>
-        </div>
+        <p className="signup-prompt">
+          New to Taskflow ? <Link to="/signup">Sign up for an account</Link>
+        </p>
       </div>
     </main>
   );

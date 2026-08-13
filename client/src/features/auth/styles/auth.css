@@ -32,23 +32,110 @@
 
 .oauth-options {
     display: grid;
-    grid-template-columns: (2, ifr);
+    grid-template-columns: 1fr 1fr;
     gap: 12px
 }
 
-.oauth-options button {
+.auth-divider {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin: 28px 0;
+    color: #6b7280;
+    font-size: 14px;
+}
+
+.auth-divider::before,
+.auth-divider::after {
+    content: "";
+    flex: 1;
+    height: 1px;
+    background: #d1d5db;
+}
+
+.auth-form {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.form-field {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.form-field label {
+    font-size: 14px;
+    font-weight: 500;
+    color: #111827;
+}
+
+.form-field input {
     width: 100%;
-    min-height: 48px;
+    height: 48px;
+    padding: 0 12px;
 
     border: 1px solid #d1d5db;
-    border-radius: 6px;
-    background-color: #fff;
+    border-radius:2px;
+
+    background: #fff;
     color: #111827;
 
-    font-size: 15px;
     font-family: inherit;
+    font-size: 15px;
 
     cursor: pointer;
 }
 
+.form-field input:focus {
+    border-color: #2563eb;
+}
 
+.password-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.password-header a {
+    font-size: 14px;
+    color: #2563eb;
+    text-decoration: none;;
+}
+
+.password-header a:hover {
+    text-decoration: underline;
+}
+
+.signup-prompt {
+    margin: 24px 0 0;
+    text-align: left;
+    font-size: 14px;
+    color: #6b7280;
+}
+
+.signup-prompt a {
+    color: #2563eb;
+    font-weight: 500;
+    text-decoration: none;
+}
+
+.signup-prompt a:hover {
+    text-decoration: underline;
+}
+
+
+@media (max-width: 480px) {
+    .auth-content {
+        padding: 24px 16px;
+    }
+
+    .auth-divider h1 {
+        font-size: 28px;
+    }
+
+    .oauth-options {
+        grid-template-columns: 1fr;
+    }
+}

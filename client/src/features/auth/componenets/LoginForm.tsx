@@ -6,14 +6,11 @@ function LoginForm() {
 
     const handleSubmit = (event:SubmitEvent<HTMLFormElement>) => {
         event.preventDefault();
-        console.log({
-            email,
-            password
-        })
+        console.log("handleLoginSubmit");
     }
     return (
-        <form onSubmit={handleSubmit}>
-            <div>
+        <form className="auth-form" onSubmit={handleSubmit}>
+            <div className="form-field">
                 <label htmlFor="email">Email</label>
                 <input 
                     id="email"
@@ -24,8 +21,11 @@ function LoginForm() {
                     placeholder="Enter your email address"
                 />
             </div>
-            <div>
-                <label htmlFor="password">Password</label>
+            <div className="form-field">
+                <div className="password-header">
+                     <label htmlFor="password">Password</label>
+                     <a href="/forgot-password">Forgot Password</a>
+                </div>
                 <input
                     id="password"
                     type="password"
@@ -35,7 +35,7 @@ function LoginForm() {
                     placeholder="Enter your password"
                 />
             </div>
-            <button type="submit">Log in</button>
+            <button className="btn btn-primary" type="submit">Log in</button>
         </form>
     )
 }
