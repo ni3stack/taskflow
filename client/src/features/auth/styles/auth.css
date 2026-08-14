@@ -125,6 +125,12 @@
     text-decoration: underline;
 }
 
+.auth-error {
+    margin: 0;
+    font-size: 14px;
+    color: #dc2626;
+}
+
 
 @media (max-width: 480px) {
     .auth-content {
