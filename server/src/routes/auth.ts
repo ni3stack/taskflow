@@ -5,36 +5,46 @@ import crypto from "crypto";
 import { authenticate } from "../middleware/auth";
 import { JWT_SECRET } from "../config/env";
 import { pool } from "../config/database";
+import { authRateLimiter } from "../middleware/rateLimiter";
 
 
 const router = express.Router();
 
-router.post("/register", async (req,res) => {
-  const { email, password } = req.body;
+router.post("/register", authRateLimiter, async (req,res) => {
+  const { name, email, password } = req.body;
 
-  if (!email || !password) {
+  if (!name || !email || !password) {
     return res.status(400).json({
-      message: "Email or password are required",
+      message: "Name, Email or password are required",
     });
   }
 
   const passwordHash = await bcrypt.hash(password, 10);
   const userId = crypto.randomUUID();
 
-  const result = await pool.query(
-    `
-      INSERT INTO users (id, email, password_hash)
-      VALUES ($1, $2, $3)
-      RETURNING id, email, created_at
-    `,
-    [userId,email,passwordHash]
-  );
-  res.status(201).json({
-    user: result.rows[0],
-  })
+  try {
+    const result = await pool.query(
+      `
+        INSERT INTO users (id, name, email, password_hash)
+        VALUES ($1, $2, $3, $4)
+        RETURNING id, email, created_at
+      `,
+      [userId, name, email, passwordHash]
+    );
+    res.status(201).json({
+      user: result.rows[0],
+    });
+  } catch (error) {
+    console.error("Registration failed:", error);
+    return res.status(500).json({
+      message: "Unable to create account"
+    });
+  }
+
+
 });
 
-router.post("/login", async (req,res) => {
+router.post("/login", authRateLimiter, async (req,res) => {
   const { email, password } = req.body;
 
   if(!email || !password) {
