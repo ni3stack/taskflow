@@ -1,12 +1,13 @@
 import { useState, type SubmitEvent } from "react"
+import { register } from "../api/authApi";
 
 function SignupForm() {
     const [ error, setError ] = useState<string | null>(null);
     const [ isloading, setIsLoading ] = useState(false);
-    const [name, setName] = useState<string>("");
-    const [emailId, setEmailId] = useState<string>("");
-    const [password, setPassword] = useState<string>("");
-    const [confirmPassword, setConfirmPassword] = useState<string>("");
+    const [ name, setName ] = useState<string>("");
+    const [ emailId, setEmailId ] = useState<string>("");
+    const [ password, setPassword ] = useState<string>("");
+    const [ confirmPassword, setConfirmPassword ] = useState<string>("");
 
     const handleSignupSubmit = async (event:SubmitEvent<HTMLFormElement>) => {
         event.preventDefault();
@@ -14,9 +15,18 @@ function SignupForm() {
         setIsLoading(true);
 
         try {
-            await new Promise((resolve) => setTimeout(resolve,1500));
-        } catch {
-            setError("Something went wrong, Please try again");
+            const response = await register({
+                name,
+                password,
+                email:emailId,
+            });
+            console.log("Registered user:", response);
+        } catch(error) {
+            setError(
+                error instanceof Error
+                 ? error.message
+                 : "Unable to create account"
+            );
         } finally {
             setIsLoading(false);
         }

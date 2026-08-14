@@ -1,21 +1,31 @@
 import { useState, type SubmitEvent } from "react";
+import { getCurrentUser, login } from "../api/authApi";
 
 function LoginForm() {
-  const [email, setEmail] = useState<string>("");
-  const [password, setPassword] = useState<string>("");
+  const [ email, setEmail ] = useState<string>("");
+  const [ password, setPassword ] = useState<string>("");
   const [ isLoading, setIsLoading ] = useState(false);
   const [ error, setError ] = useState<string|null>(null);
+  const [ token, setToken ] = useState<string|null>(null);
 
   const handleSubmit = async (event:SubmitEvent<HTMLFormElement>) => {
     event.preventDefault();
-    setError
+    setError("");
     setIsLoading(true);
 
     try {
-      // temprory simulation untill we connect with api
-      await new Promise((resolve) => setTimeout(resolve,1500));
-    } catch {
-      setError("Something went wrong. Please try again.");
+      const response = await login({
+        email,
+        password
+      });
+      setToken(response.token);
+      const currentUser = await getCurrentUser(token || response.token);
+      console.log("current User:", currentUser.user);
+    } catch (error){
+      setError(
+        error instanceof Error
+          ? error.message
+          : "Invalid email or password");
     } finally {
       setIsLoading(false);
     }
