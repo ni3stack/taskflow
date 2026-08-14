@@ -5,11 +5,12 @@ import crypto from "crypto";
 import { authenticate } from "../middleware/auth";
 import { JWT_SECRET } from "../config/env";
 import { pool } from "../config/database";
+import { authRateLimiter } from "../middleware/rateLimiter";
 
 
 const router = express.Router();
 
-router.post("/register", async (req,res) => {
+router.post("/register", authRateLimiter, async (req,res) => {
   const { name, email, password } = req.body;
 
   if (!name || !email || !password) {
@@ -43,7 +44,7 @@ router.post("/register", async (req,res) => {
 
 });
 
-router.post("/login", async (req,res) => {
+router.post("/login", authRateLimiter, async (req,res) => {
   const { email, password } = req.body;
 
   if(!email || !password) {
