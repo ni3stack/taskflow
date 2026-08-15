@@ -1,12 +1,16 @@
 import { useState, type SubmitEvent } from "react";
+import { useNavigate } from "react-router-dom";
 import { getCurrentUser, login } from "../api/authApi";
+import { useAppDispatch } from "../../../app/hook";
+import { setCredentials } from "../authSlice";
 
 function LoginForm() {
+  const dispatch = useAppDispatch();
+  const navigate = useNavigate();
   const [ email, setEmail ] = useState<string>("");
   const [ password, setPassword ] = useState<string>("");
   const [ isLoading, setIsLoading ] = useState(false);
   const [ error, setError ] = useState<string|null>(null);
-  const [ token, setToken ] = useState<string|null>(null);
 
   const handleSubmit = async (event:SubmitEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -18,9 +22,13 @@ function LoginForm() {
         email,
         password
       });
-      setToken(response.token);
-      const currentUser = await getCurrentUser(token || response.token);
-      console.log("current User:", currentUser.user);
+      const currentUser = await getCurrentUser(response.token);
+
+      dispatch(setCredentials({
+        token: response.token,
+        user: currentUser.user
+      }));
+      navigate("/dashboard");
     } catch (error){
       setError(
         error instanceof Error
