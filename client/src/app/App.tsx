@@ -5,6 +5,7 @@ import routes from "./routes";
 
 import "../styles/App.css";
 import "../styles/buttons.css";
+import "../styles/table.css";
 import { initializingAuth, setCredentials } from "../features/auth/authSlice";
 import { getCurrentUser } from "../features/auth/api/authApi";
 
