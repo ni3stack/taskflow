@@ -12,13 +12,11 @@ function Header() {
         navigate("/login");
     }
     return (
-        <header>
-            <div>Taskflow</div>
-            <div>
-                <div>
-                    <span>Welcome, { user?.name }</span>
-                </div>
-                <button onClick={handleLogout}>Logout</button>
+        <header className="header">
+            <div className="brand">Taskflow</div>
+            <div className="header-actions">
+                <span>Welcome, { user?.name }</span>
+                <button type="button" onClick={handleLogout}>Logout</button>
             </div>
         </header>
     )

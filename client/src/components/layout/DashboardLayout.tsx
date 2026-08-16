@@ -1,14 +1,15 @@
 import { Outlet } from "react-router-dom";
 import Header from "./Header";
 import Sidebar from "./Sidebar";
+import "./layout.css"
 
 function DashboardLayout() {
     return (
-        <div>
+        <div className="dashboard-layout">
             <Header />
-            <div>
+            <div className="dashboard-body">
                 <Sidebar />
-                <main>
+                <main className="dashboard-main">
                     <Outlet />
                 </main>
             </div>
