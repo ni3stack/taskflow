@@ -22,6 +22,8 @@ function LoginForm() {
         email,
         password
       });
+
+      sessionStorage.setItem("accessToken", response.token);
       const currentUser = await getCurrentUser(response.token);
 
       dispatch(setCredentials({

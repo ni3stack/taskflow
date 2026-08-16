@@ -14,6 +14,7 @@ type AuthState = {
   user: User | null;
   token: string | null;
   isAuthenticated: boolean;
+  isInitializing: boolean;
 }
 
 // Initial state
@@ -21,7 +22,8 @@ type AuthState = {
 const initialState: AuthState = {
   user: null,
   token: null,
-  isAuthenticated: false
+  isAuthenticated: false,
+  isInitializing: true
 }
 
 // Slice 
@@ -37,21 +39,26 @@ const authSlice = createSlice({
           user: User;
         }>
       ) => {
-        state.token = action.payload.token;
-        state.user = action.payload.user;
-        state.isAuthenticated = true
+      state.token = action.payload.token;
+      state.user = action.payload.user;
+      state.isAuthenticated = true;
+      state.isInitializing = false;
+
     },
     logout: (state) => {
       state.token = null;
       state.user = null;
       state.isAuthenticated = false
     },
+    initializingAuth: (state) => {
+      state.isInitializing = false;
+    }
   }
 });
 
 // Export actions
 
-export const { setCredentials, logout } = authSlice.actions;
+export const { setCredentials, logout, initializingAuth } = authSlice.actions;
 
 // Export reducer
 
