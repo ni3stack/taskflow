@@ -7,6 +7,8 @@ import SignupPage from "../features/auth/pages/SignupPage";
 import ProtectedRoute from "../features/auth/componenets/ProtectedRoute";
 import ProjectPage from "../features/project/pages/ProjectPage";
 import ProfilePage from "../features/profile/pages/ProfilePage";
+import ResetPassword from "../features/auth/pages/ResetPassword";
+import ForgotPassword from "../features/auth/pages/ForgotPassword";
 
 const routes: RouteObject[] = [
   {
@@ -16,6 +18,15 @@ const routes: RouteObject[] = [
   {
     path: "/signup",
     element: <SignupPage />
+  },
+
+  {
+    path: "/reset-password",
+    element: <ResetPassword />
+  },
+  {
+    path: "/forgot-password",
+    element: <ForgotPassword />
   },
   {
     element: <ProtectedRoute />,

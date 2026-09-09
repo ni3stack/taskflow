@@ -1,8 +1,9 @@
 import { useState, type SubmitEvent } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { getCurrentUser, login } from "../api/authApi";
 import { useAppDispatch } from "../../../app/hook";
 import { setCredentials } from "../authSlice";
+import { Button, Input } from "@ni3stack/ui";
 
 function LoginForm() {
   const dispatch = useAppDispatch();
@@ -28,7 +29,7 @@ function LoginForm() {
 
       dispatch(setCredentials({
         token: response.token,
-        user: currentUser.user
+        user: currentUser.user,
       }));
       navigate("/dashboard");
     } catch (error){
@@ -43,29 +44,31 @@ function LoginForm() {
   return (
     <form className="auth-form" onSubmit={handleSubmit}>
       <div className="form-field">
-          <label htmlFor="email">Email</label>
-          <input 
-              id="email"
-              type="email"
-              value={email}
-              onChange={(event) => setEmail(event.target.value)}
-              required
-              placeholder="Enter your email address"
-          />
+        <Input
+          id="email"
+          type="email"
+          label="Email"
+          value={email}
+          onChange={(event) => setEmail(event.target.value)}
+          required
+          placeholder="Enter your email address"
+        />
       </div>
+      
       <div className="form-field">
-          <div className="password-header">
-                <label htmlFor="password">Password</label>
-                <a href="/forgot-password">Forgot Password</a>
-          </div>
-          <input
-              id="password"
-              type="password"
-              value={password}
-              onChange={(event) => setPassword(event.target.value)}
-              required
-              placeholder="Enter your password"
-          />
+        <Input
+          id="password"
+          type="password"
+          label="Password"
+          value={password}
+          onChange={(event) => setPassword(event.target.value)}
+          required
+          showPasswordToggle
+          placeholder="Enter your password"
+        />
+        <p className="signup-prompt">
+          <Link to="/forgot-password">Forgot Password</Link>
+        </p>
       </div>
       {
         error && (
@@ -74,12 +77,12 @@ function LoginForm() {
           </p>
         )
       }
-      <button 
-        className="btn btn-primary" 
+      <Button 
+        className="tsk-btn-primary" 
         type="submit"
       >
         { isLoading ? "Loggin in..." : "Log in" }
-      </button>
+      </Button>
     </form>
   )
 }

@@ -1,39 +1,17 @@
 const API_URL =  import.meta.env.VITE_API_URL;
 
-type SignupRequest = {
-  name: string;
-  email: string;
-  password: string;
-}
+import type {
+  SignupRequest,
+  SignupResponse,
+  LoginRequest,
+  LoginResponse,
+  ForgotPasswordRequest,
+  ForgotPasswordResponse,
+  UserResponse,
+  ResetPasswordRequest,
+  ResetPasswordResponse,
+} from "../types/auth.types";
 
-type SignupResponse = {
-  user: {
-    id: string,
-    name: string,
-    email: string,
-    create_at: string
-  }
-}
-
-type LoginRequest = {
-  email: string;
-  password: string;
-}
-
-type LoginResponse = {
-  token: string;
-}
-
-type CurrentUser = {
-  id: string,
-  name: string,
-  email: string,
-  create_at: string
-}
-
-type UserResponse = {
-  user:CurrentUser
-}
 
 export async function register(
   data:SignupRequest
@@ -83,5 +61,42 @@ export async function getCurrentUser(
       throw new Error("Unable to fetch current user");
     }
     return response.json();
+
+}
+
+export async function forgotPassword(
+  data:ForgotPasswordRequest
+): Promise<ForgotPasswordResponse> {
+
+  const response = await fetch(`${API_URL}/api/auth/forgot-password`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify(data)
+  });
+
+  if(!response.ok) {
+    throw new Error("Unable to process password reset request");
+  }
+  return response.json();
+}
+
+export async function resetPassword(
+  data:ResetPasswordRequest
+):Promise<ResetPasswordResponse> {
+
+  const response = await fetch(`${API_URL}/api/auth/reset-password`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(data),
+  });
+
+  if(!response.ok) {
+    throw new Error("Invalid or expired password reset link");
+  }
+  return response.json();
 
 }
