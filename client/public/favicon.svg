@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-labelledby="title desc">
+  <title id="title">TaskFlow</title>
+  <desc id="desc">TaskFlow TF brand mark</desc>
+
+  <defs>
+    <linearGradient id="taskflow-gradient" x1="8" y1="56" x2="56" y2="8" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#2F80ED"/>
+      <stop offset="1" stop-color="#6366F1"/>
+    </linearGradient>
+    <linearGradient id="tf-highlight" x1="22" y1="17" x2="43" y2="47" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#FFFFFF"/>
+      <stop offset="1" stop-color="#DDE7FF"/>
+    </linearGradient>
+  </defs>
+
+  <rect x="3" y="3" width="58" height="58" rx="15" fill="url(#taskflow-gradient)"/>
+
+  <!-- T -->
+  <path
+    d="M14 16.5C14 15.12 15.12 14 16.5 14H47.5C48.88 14 50 15.12 50 16.5V20.5C50 21.88 48.88 23 47.5 23H36.5V47.5C36.5 48.88 35.38 50 34 50H30C28.62 50 27.5 48.88 27.5 47.5V23H16.5C15.12 23 14 21.88 14 20.5V16.5Z"
+    fill="url(#tf-highlight)"
+  />
+
+  <!-- F -->
+  <path
+    d="M39.5 28H49C50.1 28 51 28.9 51 30V33C51 34.1 50.1 35 49 35H43V38H48C49.1 38 50 38.9 50 40V43C50 44.1 49.1 45 48 45H43V48C43 49.1 42.1 50 41 50H38.5C37.4 50 36.5 49.1 36.5 48V31C36.5 29.34 37.84 28 39.5 28Z"
+    fill="#DDE7FF"
+    opacity="0.95"
+  />
+</svg>
