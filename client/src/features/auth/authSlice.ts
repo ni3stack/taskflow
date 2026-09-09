@@ -6,7 +6,7 @@ type User = {
   id: string;
   name: string;
   email: string;
-  create_at: string;
+  created_at: string;
 };
 
 // Auth type

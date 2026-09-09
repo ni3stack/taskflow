@@ -10,7 +10,9 @@ import { initializingAuth, setCredentials } from "../features/auth/authSlice";
 import { getCurrentUser } from "../features/auth/api/authApi";
 
 function App() {
+
   const dispatch = useAppDispatch();
+
   useEffect(() => {
     const restoreSession = async () => {
       const token = sessionStorage.getItem("accessToken");
