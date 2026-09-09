@@ -1,4 +1,4 @@
-import { Banner, Button, Card, CardContent, CardHeader, Input } from "@ui-lab/ui";
+import { Banner, Button, Card, CardContent, CardHeader, Input } from "@ni3stack/ui";
 import { useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom"
 import type { SubmitEvent } from "react";

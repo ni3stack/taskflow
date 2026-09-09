@@ -3,7 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { getCurrentUser, login } from "../api/authApi";
 import { useAppDispatch } from "../../../app/hook";
 import { setCredentials } from "../authSlice";
-import { Button, Input } from "@ui-lab/ui";
+import { Button, Input } from "@ni3stack/ui";
 
 function LoginForm() {
   const dispatch = useAppDispatch();

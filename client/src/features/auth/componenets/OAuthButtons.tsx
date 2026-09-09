@@ -1,4 +1,4 @@
-import { Button } from "@ui-lab/ui";
+import { Button } from "@ni3stack/ui";
 
 function OAuthButtons() {
   return(

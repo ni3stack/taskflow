@@ -11,7 +11,7 @@
   },
   "dependencies": {
     "@reduxjs/toolkit": "^2.12.0",
-    "@ui-lab/ui": "file:../../packages/ui-lab/ui-lab-ui-0.2.0.tgz",
+    "@ni3stack/ui": "0.1.0",
     "react": "^19.2.8",
     "react-dom": "^19.2.8",
     "react-redux": "^9.3.0",

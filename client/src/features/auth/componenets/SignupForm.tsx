@@ -1,7 +1,7 @@
 import { useState, type SubmitEvent } from "react"
 import { useNavigate } from "react-router-dom";
 import { register } from "../api/authApi";
-import { Banner, Button, Card, Input } from "@ui-lab/ui";
+import { Banner, Button, Input } from "@ni3stack/ui";
 
 function SignupForm() {
   const navigate = useNavigate();

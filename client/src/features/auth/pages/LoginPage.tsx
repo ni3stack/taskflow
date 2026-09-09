@@ -3,7 +3,7 @@ import LoginForm from "../componenets/LoginForm";
 import OAuthButtons from "../componenets/OAuthButtons";
 import OAuthDivider from "../componenets/OAuthDivider";
 import "../styles/auth.css";
-import { Card, CardContent, CardHeader } from "@ui-lab/ui";
+import { Card, CardContent, CardHeader } from "@ni3stack/ui";
 
 function LoginPage() {
 

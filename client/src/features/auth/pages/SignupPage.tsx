@@ -2,7 +2,7 @@ import { Link } from "react-router-dom";
 import OAuthButtons from "../componenets/OAuthButtons";
 import OAuthDivider from "../componenets/OAuthDivider";
 import SignupForm from "../componenets/SignupForm";
-import { Card, CardContent, CardHeader } from "@ui-lab/ui";
+import { Card, CardContent, CardHeader } from "@ni3stack/ui";
 
 function SignupPage() {
   return (
