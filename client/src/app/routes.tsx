@@ -1,11 +1,11 @@
 import { Navigate, type RouteObject } from "react-router-dom";
 import LoginPage from "../features/auth/pages/LoginPage";
 import DashboardPage from "../features/dashboard/pages/DashboardPage";
-import DashboardLayout from "../components/layout/DashboardLayout";
+import DashboardLayout from "../components/layout/AppLayout/AppLayout";
 import TasksPage from "../features/tasks/pages/TasksPage";
 import SignupPage from "../features/auth/pages/SignupPage";
 import ProtectedRoute from "../features/auth/componenets/ProtectedRoute";
-import ProjectPage from "../features/project/pages/ProjectPage";
+import ProjectPage from "../features/projects/pages/ProjectPage";
 import ProfilePage from "../features/profile/pages/ProfilePage";
 import ResetPassword from "../features/auth/pages/ResetPassword";
 import ForgotPassword from "../features/auth/pages/ForgotPassword";
