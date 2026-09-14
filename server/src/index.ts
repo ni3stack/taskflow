@@ -1,9 +1,8 @@
 import express from "express";
 import cors from "cors"
-import authRouter from "./routes/auth";
+import authRouter from "./routes/auth.routes";
 import { PORT } from "./config/env";
 import { pool } from "./config/database";
-import { resend } from "./config/email";
 
 const app = express();
 

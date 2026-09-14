@@ -1,0 +1,23 @@
+import {
+  Request,
+  Response,
+  NextFunction
+} from "express";
+
+type AppHandler = (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => unknown;
+
+export const asyncHandler = (
+  fn: AppHandler
+) => {
+  return (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ) => {
+    Promise.resolve(fn(req,res,next)).catch(next);
+  };
+};
