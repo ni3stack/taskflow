@@ -1,0 +1,69 @@
+name: CI
+
+on:
+  pull_request:
+    paths:
+      - "server/**"
+      - ".github/workflows/server-ci.yml"
+  push:
+    branches:
+      - master
+
+jobs:
+  server:
+    name: Server CI
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: taskflow_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd="pg_isready -U postgres -d taskflow_test"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
+
+    defaults:
+      run:
+        working-directory: server
+
+    steps:
+      - name: checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: server/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+      
+      - name: Run migrations
+        env: 
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/taskflow_test
+        run: npm run migrate -- up
+      
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Test
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/taskflow_test
+          JWT_SECRET: test-secret
+          RESEND_API_KEY: test-resend-key
+        run: npm test -- --runInBand
+      
+      - name: Build
+        run: npm run build
