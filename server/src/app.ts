@@ -2,9 +2,14 @@ import express from "express";
 import cors from "cors";
 
 import authRouter from "./routes/auth.routes";
-// import projectRouter from "./routes/project.routes";
+import projectRouter from "./routes/project.routes";
 
 import { errorHandler } from "./middleware/error.middleware";
+import { 
+  authRateLimiter,
+  apiRateLimiter
+} from "./middleware/rateLimiter.middleware";
+
 
 const app = express();
 
@@ -30,8 +35,30 @@ app.get("api/health", (_req,res) => {
   })
 });
 
-app.use("/api/auth", authRouter);
-// app.use("/api/projects", projectRouter);
+
+app.use("/api/auth", authRateLimiter, authRouter);
+app.use("/api/projects", apiRateLimiter, projectRouter);
+
+
+app.get("/test-cookie", (_req, res) => {
+  res.cookie("taskflow_test", "test", {
+    httpOnly: true,
+    sameSite: "none",
+  });
+
+  return res.json({
+    message: "Test cookie set",
+  });
+});
+
+app.post("/test-csrf", (_req, res) => {
+  console.log("🚨 CSRF request reached backend");
+
+  return res.json({
+    message: "Request accepted",
+  });
+});
+
 
 app.use(errorHandler);
 
