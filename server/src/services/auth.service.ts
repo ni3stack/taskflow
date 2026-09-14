@@ -4,15 +4,40 @@ import jwt from "jsonwebtoken";
 
 import { pool } from "../config/database";
 import { JWT_SECRET } from "../config/env";
+
 export interface PasswordResetRequest {
   email:string;
   resetToken: string
 }
 
-export async function login(
+type passwordResetType = Promise<PasswordResetRequest | null>;
+
+export const registerUser = async (
+  name: string,
+  email: string,
+  password: string
+) => {
+  const passwordHash = await bcrypt.hash(password, 10);
+  const userId = crypto.randomUUID();
+
+  const result = pool.query(
+    `
+     INSERT INTO users 
+     (id, name, email, password_hash)
+     VALUES ($1, $2, $3, $4)
+     RETURNING id, email, created_at
+    `,
+    [userId, name, email, passwordHash]
+  );
+
+  return (await result).rows[0];
+};
+
+
+export const loginUser = async ( 
   email:string,
   password:string
-) {
+) => {
    const result = await pool.query(
     `
       SELECT id, email, password_hash
@@ -53,9 +78,23 @@ export async function login(
   };
 }
 
-export async function requestPasswordReset(
+export const getUserById = async (
+  userId:string
+) => {
+  const result = await pool.query(
+    `
+      SELECT id, name, email, created_at
+      FROM users 
+      WHERE id = $1
+    `,
+    [userId]
+  );
+  return result.rows[0] ?? null;
+}
+
+export const requestPasswordReset = async (
   email:string
-):Promise<PasswordResetRequest | null> {
+):passwordResetType => {
 
   const userResult = await pool.query(
     `
@@ -102,10 +141,10 @@ export async function requestPasswordReset(
   }
 }
 
-export async function resetPassword(
+export const resetPassword = async (
   resetToken:string,
   newPassword:string
-):Promise<boolean> {
+):Promise<boolean> => {
 
   const tokenHash = crypto.createHash("sha256")
     .update(resetToken)
