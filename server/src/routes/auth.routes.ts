@@ -8,8 +8,11 @@ import {
   forgotPassword,
   resetPasswordController,
 } from "../controllers/auth.controller";
+import { authRateLimiter } from "../middleware/rateLimiter.middleware";
 
 const router = express.Router();
+
+router.use(authRateLimiter);
 
 router.post("/register", register);
 
