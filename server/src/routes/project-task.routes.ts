@@ -14,7 +14,7 @@ import {
 
 const router = Router({ mergeParams: true });
 
-router.use(authenticate, apiRateLimiter);
+router.use(apiRateLimiter, authenticate);
 
 router.get(
   "/",
