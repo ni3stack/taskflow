@@ -5,6 +5,7 @@ import authRouter from "./routes/auth.routes";
 import projectRouter from "./routes/project.routes";
 import taskRouter from "./routes/task.routes";
 import projectTaskRouter from "./routes/project-task.routes";
+import workspaceRouter from "./routes/workspace.routes";
 
 import { errorHandler } from "./middleware/error.middleware";
 
@@ -38,6 +39,7 @@ app.use("/api/auth", authRouter);
 app.use("/api/projects", projectRouter);
 app.use("/api/tasks", taskRouter)
 app.use("/api/projects/:projectId/tasks", projectTaskRouter);
+app.use("/api/workspaces", workspaceRouter)
 
 
 app.get("/test-cookie", (_req, res) => {
