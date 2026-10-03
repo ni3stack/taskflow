@@ -1,4 +1,5 @@
 import { z } from "zod"
+import { workspaceIdSchema } from "./workspace.validator";
 
 export const createProjectSchema = z.
   object({
@@ -35,6 +36,10 @@ export const updateProjectSchema = z
   )
 
 export const projectIdSchema = z.object({
+  id: z.uuid("Invalid project ID"),
+});
+
+export const workspaceProjectParamsSchema = workspaceIdSchema.extend({
   id: z.uuid("Invalid project ID"),
 });
 

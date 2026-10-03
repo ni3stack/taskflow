@@ -36,7 +36,7 @@ app.get("api/health", (_req,res) => {
 
 
 app.use("/api/auth", authRouter);
-app.use("/api/projects", projectRouter);
+app.use("/api/workspaces/:workspaceId/projects", projectRouter);
 app.use("/api/tasks", taskRouter)
 app.use("/api/projects/:projectId/tasks", projectTaskRouter);
 app.use("/api/workspaces", workspaceRouter)

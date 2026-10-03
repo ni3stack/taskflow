@@ -11,38 +11,44 @@ import { validate } from "../middleware/validate.middleware";
 import { 
   createProjectSchema, 
   projectIdSchema, 
-  updateProjectSchema 
+  updateProjectSchema, 
+  workspaceProjectParamsSchema
 } from "../validators/project.validator";
 import { apiRateLimiter } from "../middleware/rateLimiter.middleware";
+import { workspaceIdSchema } from "../validators/workspace.validator";
 
-const router = Router();
+const router = Router({ mergeParams: true });
 
 router.use(apiRateLimiter, authenticate);
 
 router.post(
-  "/", 
+  "/",
+  validate(workspaceIdSchema, "params"),
   validate(createProjectSchema),
   createProject
 );
 
-router.get("/", getProjects);
+router.get("/", 
+  validate(workspaceIdSchema, "params"),  
+  getProjects
+);
 
 router.get(
   "/:id", 
-  validate(projectIdSchema, "params"),
+  validate(workspaceProjectParamsSchema, "params"),
   getProjectById
 );
 
 router.patch(
   "/:id",
-  validate(projectIdSchema, "params"),
+  validate(workspaceProjectParamsSchema, "params"),
   validate(updateProjectSchema),
   updateProject
 );
 
 router.delete(
   "/:id",
-  validate(projectIdSchema, "params"),
+  validate(workspaceProjectParamsSchema, "params"),
   deleteProject
 );
 
