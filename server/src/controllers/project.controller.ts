@@ -34,6 +34,13 @@ export const createProject = asyncHandler(async (
     name,
     description
   );
+
+  if (!project) {
+    return res.status(404).json({
+      message: "Unable to create project",
+    });
+  }
+
   return res.status(201).json(project);
 });
 
@@ -58,6 +65,13 @@ export const getProjects = asyncHandler(async (
   }
 
   const projects = await getProjectService(workspaceId, userId);
+
+  if (!projects) {
+    return res.status(404).json({
+      message: "Projects not found",
+    });
+  }
+
   return res.status(200).json(projects);
 });
 

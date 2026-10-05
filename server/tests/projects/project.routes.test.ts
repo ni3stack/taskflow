@@ -10,289 +10,243 @@ describe("Project API", () => {
     email: `project-test-${Date.now()}@example.com`,
     password: "TestPassword123!",
   };
-
   const secondUser = {
-    name: "Second Test User",
-    email: `project-test-2-${Date.now()}@example.com`,
+    name: "Second Project Test User",
+    email: `project-test-second-${Date.now()}@example.com`,
     password: "TestPassword123!",
   };
 
-  beforeAll(async () => {
-    // Create first user
-    await request(app)
-      .post("/api/auth/register")
-      .send(testUser);
+  const createWorkspace = async (name: string, authToken = token) => {
+    const response = await request(app)
+      .post("/api/workspaces")
+      .set("Authorization", `Bearer ${authToken}`)
+      .send({ name });
 
+    expect(response.status).toBe(201);
+    return response.body;
+  };
+
+  const createProject = async (
+    workspaceId: string,
+    name: string,
+    authToken = token,
+    description?: string
+  ) => {
+    const response = await request(app)
+      .post(`/api/workspaces/${workspaceId}/projects`)
+      .set("Authorization", `Bearer ${authToken}`)
+      .send({ name, ...(description ? { description } : {}) });
+
+    expect(response.status).toBe(201);
+    return response.body;
+  };
+
+  beforeAll(async () => {
+    await request(app).post("/api/auth/register").send(testUser);
     const loginResponse = await request(app)
       .post("/api/auth/login")
-      .send({
-        email: testUser.email,
-        password: testUser.password,
-      });
+      .send({ email: testUser.email, password: testUser.password });
 
     expect(loginResponse.status).toBe(200);
     token = loginResponse.body.token;
 
-    // Create second user for ownership tests
-    await request(app)
-      .post("/api/auth/register")
-      .send(secondUser);
-
+    await request(app).post("/api/auth/register").send(secondUser);
     const secondLoginResponse = await request(app)
       .post("/api/auth/login")
-      .send({
-        email: secondUser.email,
-        password: secondUser.password,
-      });
+      .send({ email: secondUser.email, password: secondUser.password });
 
     expect(secondLoginResponse.status).toBe(200);
     secondUserToken = secondLoginResponse.body.token;
   });
 
-  describe("GET /api/projects", () => {
-    it("should reject unauthenticated requests", async () => {
+  describe("POST /api/workspaces/:workspaceId/projects", () => {
+    it("creates a project for a workspace member", async () => {
+      const workspace = await createWorkspace("Project creation workspace");
+
       const response = await request(app)
-        .get("/api/projects");
-
-      expect(response.status).toBe(401);
-    });
-
-    it("should return the authenticated user's projects", async () => {
-      await request(app)
-        .post("/api/projects")
+        .post(`/api/workspaces/${workspace.id}/projects`)
         .set("Authorization", `Bearer ${token}`)
-        .send({
-          name: "My Test Project",
-          description: "Project description",
-        });
-
-      const response = await request(app)
-        .get("/api/projects")
-        .set("Authorization", `Bearer ${token}`);
-
-      expect(response.status).toBe(200);
-      expect(Array.isArray(response.body)).toBe(true);
-
-      expect(response.body).toEqual(
-        expect.arrayContaining([
-          expect.objectContaining({
-            name: "My Test Project",
-          }),
-        ])
-      );
-    });
-  });
-
-  describe("POST /api/projects", () => {
-    it("should create a project", async () => {
-      const response = await request(app)
-        .post("/api/projects")
-        .set("Authorization", `Bearer ${token}`)
-        .send({
-          name: "Created Project",
-          description: "Created by integration test",
-        });
+        .send({ name: "Created Project", description: "Project description" });
 
       expect(response.status).toBe(201);
-
       expect(response.body).toEqual(
         expect.objectContaining({
+          id: expect.any(String),
+          workspace_id: workspace.id,
+          created_by: expect.any(String),
           name: "Created Project",
-          description: "Created by integration test",
+          description: "Project description",
         })
       );
-
-      expect(response.body.id).toEqual(expect.any(String));
-      expect(response.body.user_id).toEqual(expect.any(String));
     });
 
-    it("should reject unauthenticated requests", async () => {
+    it("rejects an unauthenticated request", async () => {
+      const workspace = await createWorkspace("Unauthenticated project workspace");
+
       const response = await request(app)
-        .post("/api/projects")
-        .send({
-          name: "Unauthorized Project",
-        });
+        .post(`/api/workspaces/${workspace.id}/projects`)
+        .send({ name: "Unauthorized Project" });
 
       expect(response.status).toBe(401);
     });
 
-    it("should reject a missing project name", async () => {
-      const response = await request(app)
-        .post("/api/projects")
+    it("validates the workspace id and project payload", async () => {
+      const invalidWorkspaceResponse = await request(app)
+        .post("/api/workspaces/not-a-uuid/projects")
         .set("Authorization", `Bearer ${token}`)
-        .send({
-          description: "Missing name",
-        });
+        .send({ name: "Project" });
+      expect(invalidWorkspaceResponse.status).toBe(400);
 
-      expect(response.status).toBe(400);
-      expect(response.body.message).toBe("Validation failed");
-    });
-  });
-
-  describe("GET /api/projects/:id", () => {
-    it("should return a project by id", async () => {
-      const createResponse = await request(app)
-        .post("/api/projects")
+      const workspace = await createWorkspace("Project validation workspace");
+      const invalidPayloadResponse = await request(app)
+        .post(`/api/workspaces/${workspace.id}/projects`)
         .set("Authorization", `Bearer ${token}`)
-        .send({
-          name: "Get Project",
-        });
-
-      const projectId = createResponse.body.id;
-
-      const response = await request(app)
-        .get(`/api/projects/${projectId}`)
-        .set("Authorization", `Bearer ${token}`);
-
-      expect(response.status).toBe(200);
-
-      expect(response.body).toEqual(
-        expect.objectContaining({
-          id: projectId,
-          name: "Get Project",
-        })
-      );
+        .send({ description: "Missing project name" });
+      expect(invalidPayloadResponse.status).toBe(400);
     });
 
-    it("should return 404 when project does not exist", async () => {
+    it("does not let a non-member create a project", async () => {
+      const workspace = await createWorkspace("Private project workspace");
+
       const response = await request(app)
-        .get("/api/projects/00000000-0000-0000-0000-000000000000")
-        .set("Authorization", `Bearer ${token}`);
+        .post(`/api/workspaces/${workspace.id}/projects`)
+        .set("Authorization", `Bearer ${secondUserToken}`)
+        .send({ name: "Unauthorized Project" });
 
       expect(response.status).toBe(404);
     });
+  });
 
-    it("should reject an invalid project id", async () => {
+  describe("GET /api/workspaces/:workspaceId/projects", () => {
+    it("returns projects belonging to the requested workspace", async () => {
+      const workspace = await createWorkspace("Project list workspace");
+      const project = await createProject(workspace.id, "Listed Project");
+
       const response = await request(app)
-        .get("/api/projects/not-a-uuid")
+        .get(`/api/workspaces/${workspace.id}/projects`)
         .set("Authorization", `Bearer ${token}`);
 
-      expect(response.status).toBe(400);
+      expect(response.status).toBe(200);
+      expect(response.body).toEqual(
+        expect.arrayContaining([expect.objectContaining({ id: project.id, name: "Listed Project" })])
+      );
     });
 
-    it("should not allow another user to access the project", async () => {
-      const createResponse = await request(app)
-        .post("/api/projects")
-        .set("Authorization", `Bearer ${token}`)
-        .send({
-          name: "Private Project",
-        });
+    it("rejects unauthenticated and non-member requests", async () => {
+      const workspace = await createWorkspace("Private project list workspace");
 
-      const projectId = createResponse.body.id;
+      const unauthenticatedResponse = await request(app)
+        .get(`/api/workspaces/${workspace.id}/projects`);
+      expect(unauthenticatedResponse.status).toBe(401);
 
-      const response = await request(app)
-        .get(`/api/projects/${projectId}`)
+      const nonMemberResponse = await request(app)
+        .get(`/api/workspaces/${workspace.id}/projects`)
         .set("Authorization", `Bearer ${secondUserToken}`);
-
-      expect(response.status).toBe(404);
+      expect(nonMemberResponse.status).toBe(404);
     });
   });
 
-  describe("PATCH /api/projects/:id", () => {
-    it("should update a project", async () => {
-      const createResponse = await request(app)
-        .post("/api/projects")
-        .set("Authorization", `Bearer ${token}`)
-        .send({
-          name: "Original Project",
-          description: "Original description",
-        });
-
-      const projectId = createResponse.body.id;
+  describe("GET /api/workspaces/:workspaceId/projects/:id", () => {
+    it("returns a project to a workspace member", async () => {
+      const workspace = await createWorkspace("Project detail workspace");
+      const project = await createProject(workspace.id, "Detail Project");
 
       const response = await request(app)
-        .patch(`/api/projects/${projectId}`)
-        .set("Authorization", `Bearer ${token}`)
-        .send({
-          name: "Updated Project",
-        });
+        .get(`/api/workspaces/${workspace.id}/projects/${project.id}`)
+        .set("Authorization", `Bearer ${token}`);
 
       expect(response.status).toBe(200);
+      expect(response.body).toEqual(expect.objectContaining({ id: project.id, name: "Detail Project" }));
+    });
 
+    it("does not expose a project through another workspace", async () => {
+      const firstWorkspace = await createWorkspace("First project boundary workspace");
+      const secondWorkspace = await createWorkspace("Second project boundary workspace");
+      const project = await createProject(firstWorkspace.id, "Bounded Project");
+
+      const response = await request(app)
+        .get(`/api/workspaces/${secondWorkspace.id}/projects/${project.id}`)
+        .set("Authorization", `Bearer ${token}`);
+
+      expect(response.status).toBe(404);
+    });
+
+    it("rejects invalid project ids and non-members", async () => {
+      const workspace = await createWorkspace("Project access workspace");
+      const project = await createProject(workspace.id, "Private Detail Project");
+
+      const invalidIdResponse = await request(app)
+        .get(`/api/workspaces/${workspace.id}/projects/not-a-uuid`)
+        .set("Authorization", `Bearer ${token}`);
+      expect(invalidIdResponse.status).toBe(400);
+
+      const nonMemberResponse = await request(app)
+        .get(`/api/workspaces/${workspace.id}/projects/${project.id}`)
+        .set("Authorization", `Bearer ${secondUserToken}`);
+      expect(nonMemberResponse.status).toBe(404);
+    });
+  });
+
+  describe("PATCH /api/workspaces/:workspaceId/projects/:id", () => {
+    it("lets the project manager update a project", async () => {
+      const workspace = await createWorkspace("Project update workspace");
+      const project = await createProject(workspace.id, "Original Project", token, "Original description");
+
+      const response = await request(app)
+        .patch(`/api/workspaces/${workspace.id}/projects/${project.id}`)
+        .set("Authorization", `Bearer ${token}`)
+        .send({ name: "Updated Project" });
+
+      expect(response.status).toBe(200);
       expect(response.body).toEqual(
         expect.objectContaining({
-          id: projectId,
+          id: project.id,
           name: "Updated Project",
           description: "Original description",
         })
       );
     });
 
-    it("should reject an empty update", async () => {
-      const createResponse = await request(app)
-        .post("/api/projects")
-        .set("Authorization", `Bearer ${token}`)
-        .send({
-          name: "Project",
-        });
+    it("rejects empty updates and non-member updates", async () => {
+      const workspace = await createWorkspace("Project update permissions workspace");
+      const project = await createProject(workspace.id, "Protected Project");
 
-      const projectId = createResponse.body.id;
-
-      const response = await request(app)
-        .patch(`/api/projects/${projectId}`)
+      const emptyUpdateResponse = await request(app)
+        .patch(`/api/workspaces/${workspace.id}/projects/${project.id}`)
         .set("Authorization", `Bearer ${token}`)
         .send({});
+      expect(emptyUpdateResponse.status).toBe(400);
 
-      expect(response.status).toBe(400);
-    });
-
-    it("should return 404 when updating another user's project", async () => {
-      const createResponse = await request(app)
-        .post("/api/projects")
-        .set("Authorization", `Bearer ${token}`)
-        .send({
-          name: "Private Project",
-        });
-
-      const projectId = createResponse.body.id;
-
-      const response = await request(app)
-        .patch(`/api/projects/${projectId}`)
+      const nonMemberResponse = await request(app)
+        .patch(`/api/workspaces/${workspace.id}/projects/${project.id}`)
         .set("Authorization", `Bearer ${secondUserToken}`)
-        .send({
-          name: "Hacked Project",
-        });
-
-      expect(response.status).toBe(404);
+        .send({ name: "Hacked Project" });
+      expect(nonMemberResponse.status).toBe(404);
     });
   });
 
-  describe("DELETE /api/projects/:id", () => {
-    it("should delete a project", async () => {
-      const createResponse = await request(app)
-        .post("/api/projects")
-        .set("Authorization", `Bearer ${token}`)
-        .send({
-          name: "Delete Project",
-        });
+  describe("DELETE /api/workspaces/:workspaceId/projects/:id", () => {
+    it("lets the project manager delete a project", async () => {
+      const workspace = await createWorkspace("Project deletion workspace");
+      const project = await createProject(workspace.id, "Delete Project");
 
-      const projectId = createResponse.body.id;
-
-      const response = await request(app)
-        .delete(`/api/projects/${projectId}`)
+      const deleteResponse = await request(app)
+        .delete(`/api/workspaces/${workspace.id}/projects/${project.id}`)
         .set("Authorization", `Bearer ${token}`);
-
-      expect(response.status).toBe(204);
+      expect(deleteResponse.status).toBe(204);
 
       const getResponse = await request(app)
-        .get(`/api/projects/${projectId}`)
+        .get(`/api/workspaces/${workspace.id}/projects/${project.id}`)
         .set("Authorization", `Bearer ${token}`);
-
       expect(getResponse.status).toBe(404);
     });
 
-    it("should return 404 when deleting another user's project", async () => {
-      const createResponse = await request(app)
-        .post("/api/projects")
-        .set("Authorization", `Bearer ${token}`)
-        .send({
-          name: "Private Project",
-        });
-
-      const projectId = createResponse.body.id;
+    it("does not let a non-member delete a project", async () => {
+      const workspace = await createWorkspace("Project deletion permissions workspace");
+      const project = await createProject(workspace.id, "Protected Delete Project");
 
       const response = await request(app)
-        .delete(`/api/projects/${projectId}`)
+        .delete(`/api/workspaces/${workspace.id}/projects/${project.id}`)
         .set("Authorization", `Bearer ${secondUserToken}`);
 
       expect(response.status).toBe(404);
