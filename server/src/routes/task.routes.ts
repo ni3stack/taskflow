@@ -8,7 +8,7 @@ import { apiRateLimiter } from "../middleware/rateLimiter.middleware";
 
 const router = Router();
 
-router.use(authenticate, apiRateLimiter);
+router.use(apiRateLimiter, authenticate);
 
 
 router.post(

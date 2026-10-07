@@ -10,7 +10,6 @@ import { authenticate } from "../middleware/auth.middleware"
 import { validate } from "../middleware/validate.middleware";
 import { 
   createProjectSchema, 
-  projectIdSchema, 
   updateProjectSchema, 
   workspaceProjectParamsSchema
 } from "../validators/project.validator";
