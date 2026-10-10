@@ -1,7 +1,7 @@
 import crypto from "crypto";
 import { pool } from "../config/database";
 
-export const createTask = async(
+export const createTask = async (
   userId: string,
   projectId: string,
   title: string,
@@ -10,27 +10,9 @@ export const createTask = async(
   priority = "medium",
   dueDate?: string
 ) => {
-  // First verify the project belongs to this user
-
-  const projectResult = await pool.query(
-    `
-      SELECT id
-      FROM projects
-      WHERE id = $1
-      AND user_id = $2
-    `,
-    [projectId, userId]
-  );
-
-  if (!projectResult?.rows[0]) {
-    return null;
-  }
-
-  const taskId = crypto.randomUUID();
-
   const result = await pool.query(
     `
-      INSERT INTO tasks(
+      INSERT INTO tasks (
         id,
         user_id,
         project_id,
@@ -40,7 +22,15 @@ export const createTask = async(
         priority,
         due_date
       )
-      VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+      SELECT
+        $1, $2, p.id, $4, $5, $6, $7, $8
+      FROM projects p
+      INNER JOIN project_members pm
+        ON pm.project_id = p.id
+        AND pm.workspace_id = p.workspace_id
+      WHERE p.id = $3
+        AND pm.user_id = $2
+        AND pm.role IN ('manager', 'contributor')
       RETURNING
         id,
         user_id,
@@ -54,7 +44,7 @@ export const createTask = async(
         updated_at
     `,
     [
-      taskId,
+      crypto.randomUUID(),
       userId,
       projectId,
       title,
@@ -65,8 +55,8 @@ export const createTask = async(
     ]
   );
 
-  return result.rows[0]
-}
+  return result.rows[0] ?? null;
+};
 
 export const getTasks = async(
   userId:string
@@ -124,26 +114,55 @@ export const getTasksByProjectId = async (
   projectId: string,
   userId: string
 ) => {
-  const result = await pool.query(
+  const access = await pool.query(
     `
-      SELECT
-        id,
-        user_id,
-        project_id,
-        title,
-        description,
-        status,
-        priority,
-        due_date,
-        created_at,
-        updated_at
-      FROM tasks
-      WHERE project_id = $1
-        AND user_id = $2
-      ORDER BY created_at DESC
+      SELECT p.id
+      FROM projects p
+      INNER JOIN workspace_members wm
+        ON wm.workspace_id = p.workspace_id
+        AND wm.user_id = $2
+      WHERE p.id = $1
+        AND (
+          wm.role IN ('owner', 'admin')
+          OR EXISTS (
+            SELECT 1
+            FROM project_members pm
+            WHERE pm.project_id = p.id
+              AND pm.workspace_id = p.workspace_id
+              AND pm.user_id = $2
+          )
+        )
     `,
     [projectId, userId]
   );
+
+  if (access.rows.length === 0) {
+    return null;
+  }
+  const result = await pool.query(
+      `
+        SELECT
+          t.id,
+          t.user_id,
+          t.project_id,
+          t.title,
+          t.description,
+          t.status,
+          t.priority,
+          t.due_date,
+          t.created_at,
+          t.updated_at
+        FROM tasks t
+        INNER JOIN projects p
+          ON p.id = t.project_id
+        INNER JOIN workspace_members wm
+          ON wm.workspace_id = p.workspace_id
+        WHERE p.id = $1
+          AND wm.user_id = $2
+        ORDER BY t.created_at DESC, t.id DESC
+      `,
+      [projectId, userId]
+    );
 
   return result.rows;
 };
@@ -236,3 +255,50 @@ export const deleteTask = async (
 
   return result.rows[0] ?? null;
 };
+
+
+// Workspace related services
+
+export const getWorkspaceTasks = async (
+  workspaceId: string,
+  userId: string
+) => {
+  const membership = await pool.query(
+    `
+      SELECT user_id
+      FROM workspace_members
+      WHERE workspace_id = $1
+        AND user_id = $2
+    `,
+    [workspaceId, userId]
+  );
+
+  if (!membership.rows[0]) {
+    return null;
+  }
+
+  const result = await pool.query(
+    `
+      SELECT
+        t.id,
+        t.project_id,
+        p.name AS project_name,
+        t.title,
+        t.description,
+        t.status,
+        t.priority,
+        t.due_date,
+        t.created_at,
+        t.updated_at
+      FROM tasks t
+      INNER JOIN projects p ON p.id = t.project_id
+      INNER JOIN workspace_members wm ON wm.workspace_id = p.workspace_id
+      WHERE p.workspace_id = $1
+        AND wm.user_id = $2
+      ORDER BY t.created_at DESC, t.id DESC
+    `,
+    [workspaceId, userId]
+  );
+
+  return result.rows;
+}

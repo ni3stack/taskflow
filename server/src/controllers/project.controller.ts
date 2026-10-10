@@ -20,11 +20,27 @@ export const createProject = asyncHandler(async (
   }
   const { name, description } = req.body;
 
+  const { workspaceId } = req.params;
+
+  if (typeof workspaceId !== "string") {
+    return res.status(400).json({
+      message: "Invalid workspace ID",
+    });
+  }
+
   const project = await createProjectService(
+    workspaceId,
     req.user.userId,
     name,
     description
   );
+
+  if (!project) {
+    return res.status(404).json({
+      message: "Unable to create project",
+    });
+  }
+
   return res.status(201).json(project);
 });
 
@@ -40,7 +56,22 @@ export const getProjects = asyncHandler(async (
   }
   const { userId } = req.user;
 
-  const projects = await getProjectService(userId);
+  const { workspaceId } = req.params;
+
+  if (typeof workspaceId !== "string") {
+    return res.status(400).json({
+      message: "Invalid workspace ID",
+    });
+  }
+
+  const projects = await getProjectService(workspaceId, userId);
+
+  if (!projects) {
+    return res.status(404).json({
+      message: "Projects not found",
+    });
+  }
+
   return res.status(200).json(projects);
 });
 
@@ -54,15 +85,15 @@ export const getProjectById = asyncHandler(async (
       message: "Authentication required"
     });
   }
-  const { id } = req.params;
+  const { workspaceId, id } = req.params;
 
-  if (typeof id !== "string") {
+  if (typeof workspaceId !== "string" || typeof id !== "string") {
     return res.status(400).json({
-      message: "Invalid project ID",
+      message: "Invalid workspace or project ID",
     });
   }
 
-  const project = await getProjectByIdService(id,req.user.userId);
+  const project = await getProjectByIdService(workspaceId, id, req.user.userId);
 
   if(!project) {
     return res.status(404).json({
@@ -83,17 +114,18 @@ export const updateProject = asyncHandler(async(
     });
   }
 
-  const { id } = req.params;
+  const { workspaceId, id } = req.params;
 
-  if (typeof id !== "string") {
+  if (typeof workspaceId !== "string" || typeof id !== "string") {
     return res.status(400).json({
-      message: "Invalid project ID",
+      message: "Invalid workspace or project ID",
     });
   }
 
   const { name, description } = req.body;
 
   const project = await updateProjectService(
+    workspaceId,
     id,
     req.user.userId,
     name,
@@ -120,17 +152,16 @@ export const deleteProject = asyncHandler(async (
     })
   }
 
-  const { id } = req.params;
+  const { workspaceId, id } = req.params;
 
-  if(typeof id !== "string") {
+  if (typeof workspaceId !== "string" || typeof id !== "string") {
     return res.status(400).json({
-      message: "Invalid project ID"
-    })
+      message: "Invalid workspace or project ID",
+    });
   }
 
-  const deletedProjectId = await deleteProjectService(id,req.user.userId);
+  const deletedProjectId = await deleteProjectService(workspaceId, id, req.user.userId);
 
-  
   if (!deletedProjectId) {
     return res.status(404).json({
       message: "Project not found",
