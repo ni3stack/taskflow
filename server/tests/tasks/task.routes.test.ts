@@ -103,6 +103,43 @@ describe("Task API", () => {
       const response = await request(app).get("/api/tasks");
       expect(response.status).toBe(401);
     });
+
+    it("excludes tasks created by other project members", async () => {
+      const workspace = await createWorkspace("Shared task list workspace");
+      const project = await createProject(workspace.id, "Shared project");
+
+      await addProjectMember(
+        workspace.id,
+        project.id,
+        secondUserId,
+        "contributor"
+      );
+
+      const ownTask = await createTask(
+        project.id,
+        "My created task",
+        secondUserToken
+      );
+      const otherTask = await createTask(project.id, "Another user's task");
+
+      const response = await request(app)
+        .get("/api/tasks")
+        .set("Authorization", `Bearer ${secondUserToken}`);
+
+      expect(response.status).toBe(200);
+      expect(Array.isArray(response.body.tasks)).toBe(true);
+
+      const ids = response.body.tasks.map(
+        (task: { id: string }) => task.id
+      );
+
+      expect(ids).toContain(ownTask.id);
+      expect(ids).not.toContain(otherTask.id);
+
+      for (const task of response.body.tasks) {
+        expect(task.user_id).toBe(secondUserId);
+      }
+    });
   });
 
   describe("GET /api/workspaces/:workspaceId/tasks", () => {
@@ -243,6 +280,92 @@ describe("Task API", () => {
 
       expect(getResponse.status).toBe(404);
     });
+
+    it("returns only tasks from projects the workspace member belongs to", async () => {
+      const workspace = await createWorkspace("Task visibility workspace");
+
+      const accessibleProject = await createProject(
+        workspace.id,
+        "Accessible project"
+      );
+      const restrictedProject = await createProject(
+        workspace.id,
+        "Restricted project"
+      );
+
+      const visibleTask = await createTask(
+        accessibleProject.id,
+        "Visible task"
+      );
+      await createTask(restrictedProject.id, "Restricted task");
+
+      await addProjectMember(
+        workspace.id,
+        accessibleProject.id,
+        secondUserId,
+        "contributor"
+      );
+
+      const response = await request(app)
+        .get(`/api/workspaces/${workspace.id}/tasks`)
+        .set("Authorization", `Bearer ${secondUserToken}`);
+
+      expect(response.status).toBe(200);
+      expect(response.body.tasks.map((task: { id: string }) => task.id))
+        .toEqual([visibleTask.id]);
+    });
+
+    it("lets a workspace admin list tasks across projects", async () => {
+      const workspace = await createWorkspace("Admin task visibility");
+      const firstProject = await createProject(workspace.id, "First project");
+      const secondProject = await createProject(workspace.id, "Second project");
+
+      const firstTask = await createTask(firstProject.id, "First task");
+      const secondTask = await createTask(secondProject.id, "Second task");
+
+      await addWorkspaceAdmin(workspace.id, secondUserId);
+
+      const response = await request(app)
+        .get(`/api/workspaces/${workspace.id}/tasks`)
+        .set("Authorization", `Bearer ${secondUserToken}`);
+
+      expect(response.status).toBe(200);
+
+      const ids = response.body.tasks.map((task: { id: string }) => task.id);
+
+      expect(ids.sort()).toEqual([firstTask.id, secondTask.id].sort());
+    });
+  });
+
+  it("hides project tasks after membership is removed", async () => {
+    const workspace = await createWorkspace("Revoked access workspace");
+    const project = await createProject(workspace.id, "Revoked access project");
+    const task = await createTask(project.id, "Previously accessible task");
+
+    await addProjectMember(
+      workspace.id,
+      project.id,
+      secondUserId,
+      "contributor"
+    );
+
+    const before = await request(app)
+      .get(`/api/workspaces/${workspace.id}/tasks`)
+      .set("Authorization", `Bearer ${secondUserToken}`);
+
+    expect(before.status).toBe(200);
+    expect(before.body.tasks).toEqual([
+      expect.objectContaining({ id: task.id }),
+    ]);
+
+    await removeProjectMember(project.id, secondUserId);
+
+    const after = await request(app)
+      .get(`/api/workspaces/${workspace.id}/tasks`)
+      .set("Authorization", `Bearer ${secondUserToken}`);
+
+    expect(after.status).toBe(200);
+    expect(after.body.tasks).toEqual([]);
   });
 
   describe("POST /api/tasks", () => {
@@ -555,6 +678,64 @@ describe("Task API", () => {
         .get("/api/projects/not-a-uuid/tasks")
         .set("Authorization", `Bearer ${token}`);
       expect(response.status).toBe(400);
+    });
+
+    it("excludes tasks from a former project but retains accessible tasks", async () => {
+  const workspace = await createWorkspace("Membership task list workspace");
+  const retainedProject = await createProject(workspace.id, "Retained project");
+  const removedProject = await createProject(workspace.id, "Removed project");
+
+  await addProjectMember(
+    workspace.id,
+    retainedProject.id,
+    secondUserId,
+    "contributor"
+  );
+  await addProjectMember(
+    workspace.id,
+    removedProject.id,
+    secondUserId,
+    "contributor"
+  );
+
+  const retainedTask = await createTask(
+    retainedProject.id,
+    "Still accessible",
+    secondUserToken
+  );
+  const removedTask = await createTask(
+    removedProject.id,
+    "No longer accessible",
+    secondUserToken
+  );
+
+  const before = await request(app)
+    .get("/api/tasks")
+    .set("Authorization", `Bearer ${secondUserToken}`);
+
+      expect(before.status).toBe(200);
+      expect(before.body.tasks).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({ id: retainedTask.id }),
+          expect.objectContaining({ id: removedTask.id }),
+        ])
+      );
+
+      await removeProjectMember(removedProject.id, secondUserId);
+
+      const after = await request(app)
+        .get("/api/tasks")
+        .set("Authorization", `Bearer ${secondUserToken}`);
+
+      expect(after.status).toBe(200);
+      expect(Array.isArray(after.body.tasks)).toBe(true);
+
+      const ids = after.body.tasks.map(
+        (task: { id: string }) => task.id
+      );
+
+      expect(ids).toContain(retainedTask.id);
+      expect(ids).not.toContain(removedTask.id);
     });
   });
 });
