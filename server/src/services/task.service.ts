@@ -84,31 +84,46 @@ export const getTasks = async(
   return results.rows;
 }
 
-export const getTasksById = async(
-  taskId:string,
-  userId:string
+export const getTasksById = async (
+  taskId: string,
+  userId: string
 ) => {
-  const results = await pool.query(
+  const result = await pool.query(
     `
       SELECT
-        id,
-        user_id,
-        project_id,
-        title,
-        description,
-        status,
-        priority,
-        due_date,
-        created_at,
-        updated_at
-      FROM tasks
-      WHERE id = $1
-      AND user_id = $2
+        t.id,
+        t.user_id,
+        t.project_id,
+        t.title,
+        t.description,
+        t.status,
+        t.priority,
+        t.due_date,
+        t.created_at,
+        t.updated_at
+      FROM tasks t
+      INNER JOIN projects p
+        ON p.id = t.project_id
+      INNER JOIN workspace_members wm
+        ON wm.workspace_id = p.workspace_id
+        AND wm.user_id = $2
+      WHERE t.id = $1
+        AND (
+          wm.role IN ('owner', 'admin')
+          OR EXISTS (
+            SELECT 1
+            FROM project_members pm
+            WHERE pm.project_id = p.id
+              AND pm.workspace_id = p.workspace_id
+              AND pm.user_id = wm.user_id
+          )
+        )
     `,
-    [taskId,userId]
+    [taskId, userId]
   );
-  return results.rows[0] ?? null;
-}
+
+  return result.rows[0] ?? null;
+};
 
 export const getTasksByProjectId = async (
   projectId: string,
@@ -217,21 +232,39 @@ export const updateTask = async (
 
   const result = await pool.query(
     `
-      UPDATE tasks
+      UPDATE tasks AS t
       SET ${fields.join(", ")}
-      WHERE id = $${values.length - 1}
-        AND user_id = $${values.length}
+      where t.id = $${values.length - 1}
+      AND EXISTS (
+        SELECT 1
+        FROM projects p 
+        INNER JOIN workspace_members wm
+          ON wm.workspace_id = p.workspace_id
+          AND wm.user_id = $${values.length}
+      WHERE p.id = t.project_id
+        AND (
+          wm.role IN ('owner', 'admin')
+          OR EXISTS (
+            SELECT 1
+            FROM project_members pm
+            WHERE pm.project_id = p.id
+              AND pm.workspace_id = p.workspace_id
+              AND pm.user_id = wm.user_id
+              AND pm.role IN ('manager', 'contributor')
+          )
+        )
+    )
       RETURNING
-        id,
-        user_id,
-        project_id,
-        title,
-        description,
-        status,
-        priority,
-        due_date,
-        created_at,
-        updated_at
+        t.id,
+        t.user_id,
+        t.project_id,
+        t.title,
+        t.description,
+        t.status,
+        t.priority,
+        t.due_date,
+        t.created_at,
+        t.updated_at
     `,
     values
   );
@@ -245,10 +278,28 @@ export const deleteTask = async (
 ) => {
   const result = await pool.query(
     `
-      DELETE FROM tasks
-      WHERE id = $1
-        AND user_id = $2
-      RETURNING id
+      DELETE FROM tasks AS t
+      WHERE t.id = $1
+        AND EXISTS (
+          SELECT 1
+          FROM projects p
+          INNER JOIN workspace_members wm
+            ON wm.workspace_id = p.workspace_id
+            AND wm.user_id = $2
+          WHERE p.id = t.project_id
+            AND (
+              wm.role IN ('owner', 'admin')
+              OR EXISTS (
+                SELECT 1
+                FROM project_members pm
+                WHERE pm.project_id = p.id
+                  AND pm.workspace_id = p.workspace_id
+                  AND pm.user_id = wm.user_id
+                  AND pm.role = 'manager'
+              )
+            )
+        )
+      RETURNING t.id
     `,
     [taskId, userId]
   );
