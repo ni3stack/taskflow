@@ -1,9 +1,17 @@
 import request from "supertest";
 import app from "../../src/app";
+import {
+  addProjectMember,
+  addWorkspaceAdmin,
+  addWorkspaceMember,
+  removeProjectMember,
+} from "../helpers/fixtures";
 
 describe("Task API", () => {
   let token: string;
   let secondUserToken: string;
+  let secondUserId: string;
+  let taskOwnerId: string;
 
   const testUser = {
     name: "Task Test User",
@@ -44,6 +52,14 @@ describe("Task API", () => {
   };
 
   beforeAll(async () => {
+
+    const registerResponse = await request(app)
+      .post("/api/auth/register")
+      .send(testUser);
+
+    expect(registerResponse.status).toBe(201);
+    taskOwnerId = registerResponse.body.user.id;
+  
     await request(app).post("/api/auth/register").send(testUser);
     const loginResponse = await request(app)
       .post("/api/auth/login")
@@ -51,7 +67,11 @@ describe("Task API", () => {
     expect(loginResponse.status).toBe(200);
     token = loginResponse.body.token;
 
-    await request(app).post("/api/auth/register").send(secondUser);
+    const secondRegisterResponse = await request(app)
+      .post("/api/auth/register")
+      .send(secondUser);
+    expect(secondRegisterResponse.status).toBe(201);
+    secondUserId = secondRegisterResponse.body.user.id;
     const secondLoginResponse = await request(app)
       .post("/api/auth/login")
       .send({ email: secondUser.email, password: secondUser.password });
@@ -103,6 +123,125 @@ describe("Task API", () => {
         .get(`/api/workspaces/${workspace.id}/tasks`)
         .set("Authorization", `Bearer ${secondUserToken}`);
       expect(nonMemberResponse.status).toBe(404);
+    });
+
+    it("denies task changes by a workspace member outside the project", async () => {
+      const workspace = await createWorkspace("Workspace task permissions workspace");
+      const project = await createProject(workspace.id, "Workspace task permissions project");
+      const task = await createTask(project.id, "Workspace-protected task");
+
+      await addWorkspaceMember(workspace.id, secondUserId);
+
+      const updateResponse = await request(app)
+        .patch(`/api/tasks/${task.id}`)
+        .set("Authorization", `Bearer ${secondUserToken}`)
+        .send({ title: "Updated by admin" });
+
+      expect(updateResponse.status).toBe(404);
+
+      const deleteResponse = await request(app)
+        .delete(`/api/tasks/${task.id}`)
+        .set("Authorization", `Bearer ${secondUserToken}`);
+
+      expect(deleteResponse.status).toBe(404);
+
+      const getResponse = await request(app)
+        .get(`/api/tasks/${task.id}`)
+        .set("Authorization", `Bearer ${token}`);
+
+      expect(getResponse.status).toBe(200);
+      expect(getResponse.body).toEqual(
+        expect.objectContaining({
+          id: task.id,
+          title: task.title,
+        })
+      );
+    });
+
+    it("denies task changes after the creator leaves the project", async () => {
+      const workspace = await createWorkspace("Former member workspace");
+      const project = await createProject(workspace.id, "Former member project");
+
+      await addProjectMember(
+        workspace.id,
+        project.id,
+        secondUserId,
+        "contributor"
+      );
+
+      const task = await createTask(
+        project.id,
+        "Former member's task",
+        secondUserToken
+      );
+
+      await removeProjectMember(project.id, secondUserId);
+
+      const updateResponse = await request(app)
+        .patch(`/api/tasks/${task.id}`)
+        .set("Authorization", `Bearer ${secondUserToken}`)
+        .send({ title: "Unauthorized change" });
+
+      expect(updateResponse.status).toBe(404);
+
+      const deleteResponse = await request(app)
+        .delete(`/api/tasks/${task.id}`)
+        .set("Authorization", `Bearer ${secondUserToken}`);
+
+      expect(deleteResponse.status).toBe(404);
+
+      const getResponse = await request(app)
+        .get(`/api/tasks/${task.id}`)
+        .set("Authorization", `Bearer ${token}`);
+
+      expect(getResponse.status).toBe(200);
+      expect(getResponse.body).toEqual(
+        expect.objectContaining({
+          id: task.id,
+          title: "Former member's task",
+        })
+      );
+    });
+
+    it("lets a workspace owner update and delete without project membership", async () => {
+      const workspace = await createWorkspace("Owner permissions workspace");
+      const project = await createProject(workspace.id, "Owner permissions project");
+
+      await addProjectMember(
+        workspace.id,
+        project.id,
+        secondUserId,
+        "contributor"
+      );
+
+      const task = await createTask(
+        project.id,
+        "Contributor's task",
+        secondUserToken
+      );
+
+      // Remove the owner's project membership, retaining workspace ownership.
+      await removeProjectMember(project.id, taskOwnerId);
+
+      const updateResponse = await request(app)
+        .patch(`/api/tasks/${task.id}`)
+        .set("Authorization", `Bearer ${token}`)
+        .send({ title: "Updated by workspace owner" });
+
+      expect(updateResponse.status).toBe(200);
+      expect(updateResponse.body.task.title).toBe("Updated by workspace owner");
+
+      const deleteResponse = await request(app)
+        .delete(`/api/tasks/${task.id}`)
+        .set("Authorization", `Bearer ${token}`);
+
+      expect(deleteResponse.status).toBe(204);
+
+      const getResponse = await request(app)
+        .get(`/api/tasks/${task.id}`)
+        .set("Authorization", `Bearer ${token}`);
+
+      expect(getResponse.status).toBe(404);
     });
   });
 
@@ -232,6 +371,78 @@ describe("Task API", () => {
         .send({ title: "Hacked task" });
       expect(nonAuthorResponse.status).toBe(404);
     });
+
+    it("lets a project contributor update but not delete a task", async () => {
+      const workspace = await createWorkspace("Contributor task permissions workspace");
+      const project = await createProject(workspace.id, "Contributor task permissions project");
+      const task = await createTask(project.id, "Contributor editable task");
+      await addProjectMember(workspace.id, project.id, secondUserId, "contributor");
+
+      const updateResponse = await request(app)
+        .patch(`/api/tasks/${task.id}`)
+        .set("Authorization", `Bearer ${secondUserToken}`)
+        .send({ title: "Updated by contributor" });
+      expect(updateResponse.status).toBe(200);
+
+      const deleteResponse = await request(app)
+        .delete(`/api/tasks/${task.id}`)
+        .set("Authorization", `Bearer ${secondUserToken}`);
+      expect(deleteResponse.status).toBe(404);
+    });
+
+    it("lets a workspace admin update another member's task", async () => {
+      const workspace = await createWorkspace("Admin task update workspace");
+      const project = await createProject(workspace.id, "Admin task update project");
+      const task = await createTask(project.id, "Admin editable task");
+      await addWorkspaceAdmin(workspace.id, secondUserId);
+
+      const response = await request(app)
+        .patch(`/api/tasks/${task.id}`)
+        .set("Authorization", `Bearer ${secondUserToken}`)
+        .send({ title: "Updated by admin" });
+
+      expect(response.status).toBe(200);
+    });
+
+    it("lets a project manager update another member's task", async () => {
+      const workspace = await createWorkspace("Manager update workspace");
+      const project = await createProject(workspace.id, "Manager update project");
+      const task = await createTask(project.id, "Original task");
+
+      await addProjectMember(
+        workspace.id,
+        project.id,
+        secondUserId,
+        "manager"
+      );
+
+      const response = await request(app)
+        .patch(`/api/tasks/${task.id}`)
+        .set("Authorization", `Bearer ${secondUserToken}`)
+        .send({ title: "Updated by manager", status: "in_progress" });
+
+      expect(response.status).toBe(200);
+      expect(response.body.task).toEqual(
+        expect.objectContaining({
+          id: task.id,
+          title: "Updated by manager",
+          status: "in_progress",
+        })
+      );
+
+      const getResponse = await request(app)
+        .get(`/api/tasks/${task.id}`)
+        .set("Authorization", `Bearer ${token}`);
+
+      expect(getResponse.status).toBe(200);
+      expect(getResponse.body).toEqual(
+        expect.objectContaining({
+          id: task.id,
+          title: "Updated by manager",
+          status: "in_progress",
+        })
+      );
+    });
   });
 
   describe("DELETE /api/tasks/:id", () => {
@@ -260,6 +471,55 @@ describe("Task API", () => {
         .delete(`/api/tasks/${task.id}`)
         .set("Authorization", `Bearer ${secondUserToken}`);
       expect(response.status).toBe(404);
+    });
+
+    it("lets a project manager delete another member's task", async () => {
+      const workspace = await createWorkspace("Manager task deletion workspace");
+      const project = await createProject(workspace.id, "Manager task deletion project");
+      const task = await createTask(project.id, "Manager deletable task");
+      await addProjectMember(workspace.id, project.id, secondUserId, "manager");
+
+      const response = await request(app)
+        .delete(`/api/tasks/${task.id}`)
+        .set("Authorization", `Bearer ${secondUserToken}`);
+
+      expect(response.status).toBe(204);
+    });
+
+    it("lets a workspace admin delete another member's task", async () => {
+      const workspace = await createWorkspace("Admin task deletion workspace");
+      const project = await createProject(workspace.id, "Admin task deletion project");
+      const task = await createTask(project.id, "Admin deletable task");
+      await addWorkspaceAdmin(workspace.id, secondUserId);
+
+      const response = await request(app)
+        .delete(`/api/tasks/${task.id}`)
+        .set("Authorization", `Bearer ${secondUserToken}`);
+
+      expect(response.status).toBe(204);
+    });
+
+    it("does not let a contributor delete their own task", async () => {
+      const workspace = await createWorkspace("Contributor task deletion workspace");
+      const project = await createProject(workspace.id, "Contributor task deletion project");
+      await addProjectMember(workspace.id, project.id, secondUserId, "contributor");
+
+      const task = await createTask(project.id, "Contributor deletable task");
+
+
+      const response = await request(app)
+        .delete(`/api/tasks/${task.id}`)
+        .set("Authorization", `Bearer ${secondUserToken}`);
+
+      expect(response.status).toBe(404);
+
+      // Verify the denied request did not delete the task.
+      const getResponse = await request(app)
+        .get(`/api/tasks/${task.id}`)
+        .set("Authorization", `Bearer ${token}`);
+
+      expect(getResponse.status).toBe(200);
+      expect(getResponse.body.id).toBe(task.id);
     });
   });
 
