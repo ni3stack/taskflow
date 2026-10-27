@@ -58,31 +58,44 @@ export const createTask = async (
   return result.rows[0] ?? null;
 };
 
-export const getTasks = async(
-  userId:string
-) => {
-
+export const getTasks = async (userId: string) => {
   const results = await pool.query(
     `
-      SELECT 
-        id,
-        user_id,
-        project_id,
-        title,
-        description,
-        status,
-        priority,
-        due_date,
-        created_at,
-        updated_at
-      FROM tasks
-      WHERE user_id = $1
-      ORDER BY created_at DESC
+      SELECT
+        t.id,
+        t.user_id,
+        t.project_id,
+        t.title,
+        t.description,
+        t.status,
+        t.priority,
+        t.due_date,
+        t.created_at,
+        t.updated_at
+      FROM tasks t
+      INNER JOIN projects p
+        ON p.id = t.project_id
+      INNER JOIN workspace_members wm
+        ON wm.workspace_id = p.workspace_id
+        AND wm.user_id = $1
+      WHERE t.user_id = $1
+        AND (
+          wm.role IN ('owner', 'admin')
+          OR EXISTS (
+            SELECT 1
+            FROM project_members pm
+            WHERE pm.project_id = p.id
+              AND pm.workspace_id = p.workspace_id
+              AND pm.user_id = wm.user_id
+          )
+        )
+      ORDER BY t.created_at DESC, t.id DESC
     `,
     [userId]
   );
+
   return results.rows;
-}
+};
 
 export const getTasksById = async (
   taskId: string,
@@ -316,7 +329,7 @@ export const getWorkspaceTasks = async (
 ) => {
   const membership = await pool.query(
     `
-      SELECT user_id
+      SELECT 1
       FROM workspace_members
       WHERE workspace_id = $1
         AND user_id = $2
@@ -324,7 +337,7 @@ export const getWorkspaceTasks = async (
     [workspaceId, userId]
   );
 
-  if (!membership.rows[0]) {
+  if (membership.rows.length === 0) {
     return null;
   }
 
@@ -332,6 +345,7 @@ export const getWorkspaceTasks = async (
     `
       SELECT
         t.id,
+        t.user_id,
         t.project_id,
         p.name AS project_name,
         t.title,
@@ -342,14 +356,26 @@ export const getWorkspaceTasks = async (
         t.created_at,
         t.updated_at
       FROM tasks t
-      INNER JOIN projects p ON p.id = t.project_id
-      INNER JOIN workspace_members wm ON wm.workspace_id = p.workspace_id
-      WHERE p.workspace_id = $1
+      INNER JOIN projects p
+        ON p.id = t.project_id
+      INNER JOIN workspace_members wm
+        ON wm.workspace_id = p.workspace_id
         AND wm.user_id = $2
+      WHERE p.workspace_id = $1
+        AND (
+          wm.role IN ('owner', 'admin')
+          OR EXISTS (
+            SELECT 1
+            FROM project_members pm
+            WHERE pm.project_id = p.id
+              AND pm.workspace_id = p.workspace_id
+              AND pm.user_id = wm.user_id
+          )
+        )
       ORDER BY t.created_at DESC, t.id DESC
     `,
     [workspaceId, userId]
   );
 
   return result.rows;
-}
+};
