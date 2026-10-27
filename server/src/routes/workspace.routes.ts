@@ -9,6 +9,7 @@ import {
 import { 
   createWorkspace, 
   getWorkspaceById, 
+  getWorkspaceMembers, 
   getWorkspaces
 } from "../controllers/workspace.controller";
 
@@ -37,6 +38,12 @@ router.get(
   "/:workspaceId/tasks",
   validate(workspaceIdSchema, "params"),
   getWorkspaceTasks
+);
+
+router.get(
+  "/:workspaceId/members",
+  validate(workspaceIdSchema, "params"),
+  getWorkspaceMembers
 );
 
 export default router;

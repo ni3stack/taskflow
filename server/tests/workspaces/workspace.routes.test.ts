@@ -1,10 +1,12 @@
 import request from "supertest";
 
 import app from "../../src/app";
+import { addWorkspaceAdmin, addWorkspaceMember } from "../helpers/fixtures";
 
 describe("Workspace API", () => {
   let token: string;
   let secondUserToken: string;
+  let secondUserId: string;
 
   const testUser = {
     name: "Workspace Test User",
@@ -45,7 +47,10 @@ describe("Workspace API", () => {
     expect(loginResponse.status).toBe(200);
     token = loginResponse.body.token;
 
-    await request(app).post("/api/auth/register").send(secondUser);
+    const secondRegisterResponse = await request(app)
+      .post("/api/auth/register").send(secondUser);
+    
+    secondUserId = secondRegisterResponse.body.user.id;
 
     const secondLoginResponse = await request(app)
       .post("/api/auth/login")
@@ -56,6 +61,7 @@ describe("Workspace API", () => {
 
     expect(secondLoginResponse.status).toBe(200);
     secondUserToken = secondLoginResponse.body.token;
+    
   });
 
   describe("POST /api/workspaces", () => {
@@ -199,6 +205,94 @@ describe("Workspace API", () => {
         .set("Authorization", `Bearer ${token}`);
 
       expect(response.status).toBe(400);
+    });
+  });
+
+  describe("GET /api/workspaces/:workspacesId/members", () => {
+    it("allows the workspace owner to list members", async () => {
+      const workspace = await createWorkspace("Workspace Members");
+
+      const response = await request(app)
+        .get(`/api/workspaces/${workspace.id}/members`)
+        .set("Authorization", `Bearer ${token}`);
+
+      expect(response.status).toBe(200);
+      expect(Array.isArray(response.body.members)).toBe(true);
+      expect(response.body.members).toHaveLength(1);
+      expect(response.body.members).toEqual([
+          expect.objectContaining({
+            user_id: expect.any(String),
+            role: "owner",
+          }),
+        ]);
+    });
+
+    it("should return 404 for an inaccessible workspace", async () => {
+      const workspace = await createWorkspace("Private Workspace");
+
+      const response = await request(app)
+        .get(`/api/workspaces/${workspace.id}/members`)
+        .set("Authorization", `Bearer ${secondUserToken}`);
+
+      expect(response.status).toBe(404);
+    });
+
+    it("allows a regular member to list all the workspace members", async () => {
+      const workspace = await createWorkspace("Workspace Members");
+
+      await addWorkspaceMember(workspace.id, secondUserId);
+
+      const response = await request(app)
+        .get(`/api/workspaces/${workspace.id}/members`)
+        .set("Authorization", `Bearer ${secondUserToken}`);
+
+      expect(response.status).toBe(200);
+      expect(Array.isArray(response.body.members)).toBe(true);
+      expect(response.body.members).toHaveLength(2);
+      expect(response.body.members).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            user_id: expect.any(String),
+            role: "owner",
+          }),
+          expect.objectContaining({
+            user_id: expect.any(String),
+            role: "member",
+          }),
+        ])
+      );
+      for (const member of response.body.members) {
+        expect(member).not.toHaveProperty("password_hash");
+      }
+    });
+
+    it("allows an admin to list workspace members", async () => {
+      const workspace = await createWorkspace("Admin members Workspace");
+
+      // add second user as an admin.
+
+      await addWorkspaceAdmin(workspace.id, secondUserId);
+
+
+      const response = await request(app)
+        .get(`/api/workspaces/${workspace.id}/members`)
+        .set("Authorization", `Bearer ${secondUserToken}`);
+
+      expect(response.status).toBe(200);
+      expect(Array.isArray(response.body.members)).toBe(true);
+      expect(response.body.members).toHaveLength(2);
+      expect(response.body.members).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            user_id: expect.any(String),
+            role: "owner",
+          }),
+          expect.objectContaining({
+            user_id: secondUserId,
+            role: "admin",
+          }),
+        ])
+      );
     });
   });
 });

@@ -100,3 +100,33 @@ export const getWorkspaceById = async(
   return result.rows[0] ?? null;
 }
 
+export const getWorkspaceMembers = async(
+  workspaceId: string,
+  userId: string
+) => {
+
+  const result = await pool.query(
+    `
+      SELECT
+        wm.user_id,
+        u.name,
+        u.email,
+        wm.role,
+        wm.joined_at
+      FROM users u
+      INNER JOIN workspace_members wm
+        ON wm.user_id = u.id
+      WHERE wm.workspace_id = $1
+      AND EXISTS (
+        SELECT 1
+        FROM workspace_members requester
+        WHERE requester.workspace_id = wm.workspace_id
+          AND requester.user_id = $2
+      )
+      order by wm.joined_at ASC, wm.user_id ASC
+    `,
+    [workspaceId, userId]
+  );
+
+  return result.rows.length > 0 ? result.rows : null;
+}
