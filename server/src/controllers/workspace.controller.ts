@@ -2,7 +2,8 @@ import { Request, Response } from "express";
 import { 
   createWorkspace as createWorkspaceService,
   getWorkspaces as getWorkspacesService,
-  getWorkspaceById as getWorkspaceByIdService
+  getWorkspaceById as getWorkspaceByIdService,
+  getWorkspaceMembers as getWorkspaceMembersService
 } from "../services/workspace.service";
 
 import { asyncHandler } from "../utils/asyncHandler";
@@ -69,4 +70,33 @@ export const getWorkspaceById = asyncHandler(async(
   }
 
   return res.status(200).json(workspaces);
+});
+
+export const getWorkspaceMembers = asyncHandler(async(
+  req: Request,
+  res: Response
+) => {
+  if(!req.user) {
+    return res.status(401).json({
+      message: "Authentication required",
+    });
+  }
+  const { workspaceId } = req.params;
+
+  if(typeof workspaceId !== "string") {
+    return res.status(400).json({
+       message: "Invalid workspace ID",
+    })
+  }
+  const members = await getWorkspaceMembersService(workspaceId, req.user.userId);
+
+  if(!members) {
+    return res.status(404).json({
+      message: "Workspace not found",
+    });
+  }
+
+  return res.status(200).json({
+    members
+  });
 });
