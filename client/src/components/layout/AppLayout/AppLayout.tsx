@@ -1,7 +1,7 @@
 import { Outlet } from "react-router-dom";
-import AppNavbar from "../AppNavbar/AppNavbar";
-import AppHeader from "../AppHeader/AppHeader";
-import "./layout.css"
+import AppNavbar from "./AppNavbar/AppNavbar";
+import AppHeader from "./AppHeader/AppHeader";
+import "./AppLayout.css"
 
 function AppLayout() {
   return (
