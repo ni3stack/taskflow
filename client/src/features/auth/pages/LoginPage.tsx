@@ -8,7 +8,7 @@ import { Card, CardContent, CardHeader } from "@ni3stack/ui";
 function LoginPage() {
 
   return (
-    <main className="auth-page">
+    <div className="auth-page">
       <div className="auth-content">
         <Card>
           <CardHeader>
@@ -25,7 +25,7 @@ function LoginPage() {
            </CardContent>
         </Card>
       </div>
-    </main>
+    </div>
   );
 }
 

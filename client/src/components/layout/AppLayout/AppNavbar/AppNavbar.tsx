@@ -6,7 +6,7 @@ import {
   User,
 } from "lucide-react";
 
-import "./navbar.css";
+import "./AppNavbar.css";
 
 function Navbar() {
   return (

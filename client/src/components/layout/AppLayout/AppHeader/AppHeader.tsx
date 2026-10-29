@@ -6,12 +6,12 @@ import {
 import { 
   useAppDispatch, 
   useAppSelector
-} from "../../../app/hook";
-import { logout } from "../../../features/auth/authSlice";
+} from "../../../../app/hook";
+import { logout } from "../../../../features/auth/authSlice";
 import { useNavigate } from "react-router-dom";
 import { Button, Input } from "@ni3stack/ui";
 
-import "./header.css"
+import "./AppHeader.css"
 
 function Header() {
   const dispatch = useAppDispatch();
