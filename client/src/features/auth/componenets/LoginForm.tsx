@@ -3,7 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { getCurrentUser, login } from "../api/authApi";
 import { useAppDispatch } from "../../../app/hook";
 import { setCredentials } from "../authSlice";
-import { Button, Input } from "@ni3stack/ui";
+import { Banner, Button, Input } from "@ni3stack/ui";
 
 function LoginForm() {
   const dispatch = useAppDispatch();
@@ -42,8 +42,8 @@ function LoginForm() {
     }
   }
   return (
-    <form className="auth-form" onSubmit={handleSubmit}>
-      <div className="form-field">
+    <form className="auth-page__form" onSubmit={handleSubmit}>
+      <div className="auth-page__form-field">
         <Input
           id="email"
           type="email"
@@ -55,7 +55,7 @@ function LoginForm() {
         />
       </div>
       
-      <div className="form-field">
+      <div className="auth-page__form-field">
         <Input
           id="password"
           type="password"
@@ -66,19 +66,19 @@ function LoginForm() {
           showPasswordToggle
           placeholder="Enter your password"
         />
-        <p className="signup-prompt">
-          <Link to="/forgot-password">Forgot Password</Link>
-        </p>
+        <Link 
+          to="/forgot-password" 
+          className="text-link"
+        >
+          Forgot Password
+        </Link>
       </div>
       {
         error && (
-          <p className="auth-error" role="alert">
-            {error}
-          </p>
+          <Banner variant="error">{error}</Banner>
         )
       }
       <Button 
-        className="tsk-btn-primary" 
         type="submit"
       >
         { isLoading ? "Loggin in..." : "Log in" }

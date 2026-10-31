@@ -1,20 +1,74 @@
-.tsk-btn-primary {
-  background: #111827;
-  color: #fff;
-  border-color: #111827;
+.action {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+
+  min-height: 40px;
+  padding: 0 16px;
+  border: 1px solid transparent;
+  border-radius: 6px;
+
+  font-family: inherit;
+  font-weight: 600;
+  font-size: 14px;
+  line-height: 1.5;
+  text-decoration: none;
+  cursor: pointer;
 }
 
-.tsk-btn-primary:hover {
-  background: #1f2937;
-  border-color: #1f2937;
+.action--primary {
+  background-color: var(--color-primary);
+  color: var(--color-white);
 }
 
-.tsk-btn-secondary {
-  background: #fff;
-  color: #111827;
-  border-color: #d1d5db;
+.action--primary:hover {
+  background-color: var(--color-primary-hover);
 }
 
-.tsk-btn-secondary:hover {
-  background: #f9fafb;
+.action--ghost {
+  background-color: transparent;
+  color: var(--color-primary);
+}
+
+.action--ghost:hover {
+  background-color: var(--color-info-light);
+}
+
+.action:focus-visible {
+  outline: 2px solid var(--color-focus);
+  outline-offset: 3px;
+}
+
+.text-link {
+  color: var(--color-primary);
+  font-size: 14px;
+  font-weight: 500;
+  text-decoration: none;
+}
+
+.text-link:hover {
+  text-decoration: underline;
+}
+
+.text-link:focus-visible {
+  outline: 2px solid var(--color-focus);
+  outline-offset: 3px;
+}
+
+.icon-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  margin-bottom: 20px;
+  background-color: var(--color-info-light);
+  color: var(--color-primary);
+}
+
+.icon-container--success {
+  background-color: var(--color-success-light);
+  color: var(--color-success-text);
 }

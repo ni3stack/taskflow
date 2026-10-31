@@ -35,34 +35,6 @@
   line-height: 1.7;
 }
 
-.landing-page__cta {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 12px;
-
-  box-sizing: border-box;
-  min-height: 48px;
-  margin-top: 28px;
-  padding: var(--space-3) var(--space-6);
-  border-radius: var(--radius-sm);
-
-  background-color: var(--color-primary);
-  color: var(--color-surface);
-  font-size: var(--font-size-md);
-  font-weight: var(--font-weight-semibold);
-  text-decoration: none;
-}
-
-.landing-page__cta:hover {
-  background-color: var(--color-primary-hover);
-}
-
-.landing-page__cta:focus-visible {
-  outline: 2px solid var(--color-info);
-  outline-offset: 4px;
-}
-
 .landing-page__benefits {
   display: grid;
   gap: 12px;

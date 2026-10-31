@@ -74,7 +74,7 @@ export default function TaskPreview({ tasks }:TaskPreviewProps) {
         </CardContent>
         <CardFooter className="task-preview__caption-container">
           <ListChecks size={14} aria-hidden="true" />
-          <p className="task-preview__caption">TASKFLOW TASK_LIST PREVIEW</p>
+          <p className="task-preview__caption">TASKFLOW TASK LIST PREVIEW</p>
         </CardFooter>
       </Card>
     </div>
