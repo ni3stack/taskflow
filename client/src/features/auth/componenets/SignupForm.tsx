@@ -35,8 +35,8 @@ function SignupForm() {
     }
   };
   return (
-    <form className="auth-form" onSubmit={handleSignupSubmit}>
-      <div className="form-field">
+    <form className="auth-page__form" onSubmit={handleSignupSubmit}>
+      <div className="auth-page__form-field">
         <Input 
           id="name"
           type="text"
@@ -48,7 +48,7 @@ function SignupForm() {
           autoComplete="name"
         />
       </div>
-      <div className="form-field">
+      <div className="auth-page__form-field">
         <Input
           id="emailId"
           type="email"
@@ -58,7 +58,7 @@ function SignupForm() {
           onChange={(event) => setEmailId(event?.target.value)}
           placeholder="Enter your Email address" />
       </div>
-      <div className="form-field">
+      <div className="auth-page__form-field">
         <Input 
           id="password"
           type="password" 
@@ -72,7 +72,7 @@ function SignupForm() {
           helperText="password must contain upper case, lower case and a special character."
         />
       </div>
-      <div className="form-field">
+      <div className="auth-page__form-field">
         <Input 
           id="password"
           type="confirmPassword" 

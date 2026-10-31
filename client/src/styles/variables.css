@@ -4,9 +4,9 @@
      ================================ */
 
    /* Brand */
-      --color-primary: #6055F2;
-      --color-primary-hover: #5146E5;
-      --color-primary-light: #EEF0FD;
+   --color-primary: #6055F2;
+   --color-primary-hover: #5146E5;
+   --color-primary-light: #EEF0FD;
 
    /* Semantic */
    --color-success: #10b981;
@@ -37,6 +37,7 @@
    --color-danger-text: #b91c1c;
    --color-warning-text: #92400e;
    --color-info-text: #1d4ed8;
+   --color-success-text: #15803d;
 
 
    /* ================================
