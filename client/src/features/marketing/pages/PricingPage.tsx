@@ -21,18 +21,16 @@ export default function PricingPage() {
   return (
     <div className="pricing-page">
       <div className="pricing-page__container">
-        <div className="pricing-page__intro">
-          <header className="pricing-page__intro">
-            <p className="pricing-page__eyebrow">Pricing</p>
-            <h1 className="pricing-page__title">
-              Start with your tasks. Grow with your team.
-            </h1>
-            <p className="pricing-page__description">
-              Organize your personal tasks for free. Bring projects and people
-              together with a paid workspace.
-            </p>
-          </header>
-        </div>
+        <header className="pricing-page__intro">
+          <p className="pricing-page__eyebrow">Pricing</p>
+          <h1 className="pricing-page__title">
+            Start with your tasks. Grow with your team.
+          </h1>
+          <p className="pricing-page__description">
+            Organize your personal tasks for free. Bring projects and people
+            together with a paid workspace.
+          </p>
+        </header>
         <div className="pricing-page__content">
           <Card className="pricing-page__card">
             <CardHeader className="pricing-page__card-header">
@@ -104,21 +102,19 @@ export default function PricingPage() {
           </Card>
         </div>
         <Banner variant="info" className="pricing-page__banner">
-          <div className="pricing-page__banner-content">
-            <MessageCircle 
-              size={24}
-              className="pricing-page__banner-icon"
-              aria-hidden="true"
-            />
-            <div className="pricing-page__banner-copy">
-              <h2>Planning to bring people together?</h2>
-              <p>Contact us about a paid workspace. Pricing is to be confirmed..</p>
-            </div>
-            <Link to="/contactus" className="pricing-page__banner-link">
-              <span>Contact us</span>
-              <ArrowRight size={16} aria-hidden="true" />
-            </Link>
+          <MessageCircle 
+            size={24}
+            className="pricing-page__banner-icon"
+            aria-hidden="true"
+          />
+          <div className="pricing-page__banner-copy">
+            <h2 className="pricing-page__banner-title">Planning to bring people together?</h2>
+            <p className="pricing-page__banner-description">Contact us about a paid workspace. Pricing is to be confirmed..</p>
           </div>
+          <Link to="/contactus" className="action action--secondary">
+            <span>Contact us</span>
+            <ArrowRight size={16} aria-hidden="true" />
+          </Link>
         </Banner>
       </div>
     </div>

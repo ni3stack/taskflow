@@ -40,10 +40,11 @@
 
 .public-header__nav-link, 
 .public-header__sign-in {
+  position: relative;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-height: 44px;
+  min-height: 32px;
 
   color: inherit;
   font-size: var(--font-size-md);
@@ -52,8 +53,27 @@
   word-wrap: nowrap;
 }
 
+.public-header__nav-link[aria-current="page"] {
+  color: var(--color-primary);
+}
+
+.public-header__sign-in[aria-current="page"] {
+  background-color: var(--color-info-light);
+  color: var(--color-primary);
+  border-color: var(--color-primary);
+}
+
+.public-header__nav-link[aria-current="page"]::after {
+  content: "";
+  position: absolute;
+  inset-inline: 0;
+  bottom: 0;
+  height: 2px;
+  border-radius: 2px;
+  background-color: var(--color-primary);
+}
+
 .public-header__nav-link:hover {
-  text-decoration: underline;
   text-underline-offset: 4px;
 }
 

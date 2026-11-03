@@ -149,15 +149,13 @@
   width: 100%;
 }
 
-.pricing-page .pricing-page__banner {
-  margin-top: 32px;
-  padding: 24px;
-  background-color: var(--color-info-light);
-  border: 0;
+.pricing-page__banner {
+  margin-top: var(--space-8);
 }
 
-.pricing-page__banner-content {
-  display: flex;
+.pricing-page .banner-content  {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
   align-items: center;
   gap: 16px;
   width: 100%;
@@ -165,84 +163,22 @@
 }
 
 .pricing-page__banner-icon {
-  flex-shrink: 0;
   color: var(--color-primary);
 }
 
-.pricing-page__banner-copy {
-  flex: 1;
-  min-width: 0;
-}
-
-.pricing-page__banner_copy h2 copy{
+.pricing-page__banner-title {
   margin: 0;
   color: var(--color-text);
-  font-size: var(--font-size-lg);
-  font-weight: var(---font-weight-semibold);
-  line-height : 1.5
+  font-size: 18px;
+  font-weight: var(--font-weight-semibold);
+  line-height: 1.4;
 }
 
-.pricing-page__banner_copy h2 copy{
-  margin: 0;
-  color: var(--color-text);
-  font-size: var(--font-size-md);
-  font-weight: var(---font-weight-semibold);
-  line-height : 1.6
-}
-
-.pricing-page__banner-copy p {
-  margin: 4px 0 0;
+.pricing-page__banner-description {
+  margin: 8px 0 0;
   color: var(--color-text-secondary);
-  font-size: var(--font-size-xs);
-  line-height: 1.6;
-}
-
-.pricing-page__banner-link {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  flex-shrink: 0;
-  min-height: 44px;
-  color: var(--color-primary);
   font-size: 14px;
-  font-weight: var(--font-weight-semibold);
-  text-decoration: none;
-}
-
-
-.pricing-page__banner-link:hover {
-  text-decoration: underline;
-}
-
-.pricing-page__banner-link:focus-visible {
-  outline: 2px solid var(--color-focus);
-  outline-offset: 4px;
-}
-
-
-.pricing-page__banner-copy {
-    flex-basis: calc(100% - 40px);
-  }
-
-.pricing-page__banner-link {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  flex-shrink: 0;
-  min-height: 44px;
-  color: var(--color-primary);
-  font-size: var(--font-size-md);
-  font-weight: var(--font-weight-semibold);
-  text-decoration: none;
-}
-
-.pricing-page__banner-link:hover {
-  text-decoration: underline;
-}
-
-.pricing-page__banner-link:focus-visible {
-  outline: 2px solid var(--color-focus);
-  outline-offset: 4px;
+  line-height: 1.6;
 }
 
 @media (max-width: 800px) {
@@ -250,11 +186,8 @@
     grid-template-columns: minmax(0, 1fr);
   }
 
-  .pricing-page__banner-copy {
-    flex-basis: calc(100% - 40px);
-  }
-
-  .pricing-page__banner-link {
-    margin-left: 40px;
+  .pricing-page__banner .banner-content {
+    grid-template-columns: auto;
+    align-items: flex-start;
   }
 }
