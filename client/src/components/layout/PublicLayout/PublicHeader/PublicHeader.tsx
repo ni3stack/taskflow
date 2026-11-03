@@ -1,4 +1,4 @@
-import { Link } from "react-router-dom";
+import { Link, NavLink } from "react-router-dom";
 import "./PublicHeader.css";
 
 
@@ -11,15 +11,15 @@ export default function PublicHeader() {
           <span className="public-header__brand-name">TaskFlow</span>
         </Link>
         <nav className="public-header__nav" aria-label="Primary navigation">
-          <Link to="/features" className="public-header__nav-link">
+          <NavLink to="/features" className="public-header__nav-link">
             Features
-          </Link>
-          <Link to="/pricing" className="public-header__nav-link">
+          </NavLink>
+          <NavLink to="/pricing" className="public-header__nav-link">
             Pricing
-          </Link>
-          <Link to="/login" className="public-header__sign-in">
+          </NavLink>
+          <NavLink to="/login" className="public-header__sign-in">
             Sign in
-          </Link>
+          </NavLink>
         </nav>
       </div>
     </header>
